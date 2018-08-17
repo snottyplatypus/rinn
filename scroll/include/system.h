@@ -3,6 +3,7 @@
 
 #include "renderer.h"
 #include <memory>
+#include <libtcod.hpp>
 
 namespace scl
 {
@@ -23,6 +24,8 @@ namespace scl
 	{
 		void init();
 	}
+
+	extern std::unique_ptr<TCODRandom> rand;
 }
 
 #endif
