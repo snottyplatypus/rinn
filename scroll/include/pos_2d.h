@@ -5,21 +5,24 @@
 
 namespace scl
 {
+	template<typename T>
 	class Pos2D
 	{
 	public:
-		Pos2D(long double x, long double y);
+		Pos2D(T x, T y);
 		Pos2D(const Pos2D &pos);
 		~Pos2D();
 
-		double distance(Pos2D pos);
+		T distance(Pos2D pos);
 
-		long double _x;
-		long double _y;
+		T _x;
+		T _y;
 	};
 
-	typedef std::shared_ptr<scl::Pos2D> Pos2D_uptr;
-	typedef std::shared_ptr<scl::Pos2D> Pos2D_sptr;
+	template<typename T>
+	using Pos2D_uptr = std::unique_ptr<scl::Pos2D<T>>;
+	template<typename T>
+	using Pos2D_sptr = std::shared_ptr<scl::Pos2D<T>>;
 }
 
 #endif

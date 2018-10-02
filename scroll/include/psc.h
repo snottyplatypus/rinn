@@ -13,12 +13,12 @@ namespace scl {
 		PoissonDiskSampling(int width, int height, double min_dist, int point_count);
 		~PoissonDiskSampling(void);
 
-		std::vector<std::pair<double, double> > Generate();
+		std::vector<std::pair<double, double>> generate();
 
 	private:
 		
-		std::vector<std::vector<scl::Pos2D_sptr>> _grid;
-		std::vector<scl::Pos2D> _process;
+		std::vector<std::vector<scl::Pos2D_sptr<double>>> _grid;
+		std::vector<scl::Pos2D<double>> _process;
 		std::vector<std::pair<double, double>> _sample;
 
 		int _width;
@@ -29,10 +29,10 @@ namespace scl {
 		int _grid_width;
 		int _grid_height;
 
-		scl::Pos2D generatePointAround(scl::Pos2D p_point);
-		bool inRectangle(scl::Pos2D p_point);
-		bool inNeighbourhood(scl::Pos2D p_point);
-		std::vector<scl::Pos2D_sptr> getCellsAround(scl::Pos2D p_point);
+		scl::Pos2D<double> generatePointAround(scl::Pos2D<double> p_point);
+		bool inRectangle(scl::Pos2D<double> p_point);
+		bool inNeighbourhood(scl::Pos2D<double> p_point);
+		std::vector<scl::Pos2D_sptr<double>> getCellsAround(scl::Pos2D<double> p_point);
 
 		const double PI = 3.14159265358979323846;
 	};

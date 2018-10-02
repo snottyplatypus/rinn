@@ -1,5 +1,5 @@
-﻿#ifndef LEGENDS_H
-#define LEGENDS_H
+﻿#ifndef RINN_H
+#define RINN_H
 
 #include <iostream>
 

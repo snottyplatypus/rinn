@@ -3,15 +3,16 @@
 
 namespace scl
 {
+	template<typename T>
 	class Pos3D
 	{
 	public:
-		Pos3D(int x, int y, int z);
+		Pos3D(T x, T y, T z);
 		~Pos3D();
 
-		long int _x;
-		long int _y;
-		long int _z;
+		T _x;
+		T _y;
+		T _z;
 	};
 }
 

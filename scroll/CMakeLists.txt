@@ -6,6 +6,7 @@ include_directories(./include)
 include_directories(${SDL2_INCLUDE_DIR})
 include_directories(${TCOD_INCLUDE_DIR})
 include_directories(${CEREAL_INCLUDE_DIR})
+include_directories(${CGAL_INCLUDE_DIR})
 
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB SOURCES "src/**/*.cpp")
@@ -13,4 +14,4 @@ file(GLOB SOURCES "src/**/*.cpp")
 message(STATUS ${SOURCES})
 
 add_library(scroll STATIC ${SOURCES})
-target_link_libraries(scroll ${SDL2_LIBRARY} ${TCOD_LIBRARY})
+target_link_libraries(scroll ${SDL2_LIBRARY} ${TCOD_LIBRARY} CGAL::CGAL)
