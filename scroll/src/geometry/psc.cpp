@@ -1,4 +1,4 @@
-#include "psc.h"
+#include "geometry/psc.h"
 #include <algorithm>
 #include <libtcod.hpp>
 #include <system.h>

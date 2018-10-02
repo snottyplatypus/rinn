@@ -1,8 +1,8 @@
-#include "space_3d.h"
+#include "geometry/space_3d.h"
 
 
 template<class T>
-scl::Space3D<T>::Space3D(int width, int height, int depth): _width(width), _height(height), _depth(depth)
+scl::Space3D<T>::Space3D(double width, double height, double depth): _width(width), _height(height), _depth(depth)
 {
 }
 
@@ -12,7 +12,7 @@ scl::Space3D<T>::~Space3D()
 }
 
 template<class T>
-T & scl::Space3D<T>::operator()(int x, int y, int z)
+T & scl::Space3D<T>::operator()(double x, double y, double z)
 {
 	return _data[x + _width * (y + _depth * z)]
 }

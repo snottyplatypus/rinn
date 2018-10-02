@@ -9,15 +9,15 @@ namespace scl
 	class Space2D
 	{
 	public:
-		Space2D(int width, int height);
+		Space2D(double width, double height);
 		~Space2D();
 
 		T& operator()(int x, int y);
 
 	private:
-		std::map<int, T> _data;
-		int _width;
-		int _height;
+		std::map<double, T> _data;
+		double _width;
+		double _height;
 	};
 }
 

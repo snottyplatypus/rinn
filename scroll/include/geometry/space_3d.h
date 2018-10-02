@@ -9,16 +9,16 @@ namespace scl
 	class Space3D
 	{
 	public:
-		Space3D(int width, int height, int depth);
+		Space3D(double width, double height, double depth);
 		~Space3D();
 
-		T& operator()(int x, int y, int z);
+		T& operator()(double x, double y, double z);
 
 	private:
 		std::map<int, T> _data;
-		int _width;
-		int _height;
-		int _depth;
+		double _width;
+		double _height;
+		double _depth;
 	};
 }
 

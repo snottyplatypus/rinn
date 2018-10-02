@@ -1,7 +1,7 @@
-#include "space_2d.h"
+#include "geometry/space_2d.h"
 
 template<class T>
-scl::Space2D<T>::Space2D(int width, int height) : _width(width), _height(height)
+scl::Space2D<T>::Space2D(double width, double height) : _width(width), _height(height)
 {
 }
 
@@ -11,7 +11,7 @@ scl::Space2D<T>::~Space2D()
 }
 
 template<class T>
-T & scl::Space2D<T>::operator()(int x, int y)
+T & scl::Space2D<T>::operator()(double x, double y)
 {
 	return _data[x + _width * y]
 }
