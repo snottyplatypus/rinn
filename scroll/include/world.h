@@ -1,7 +1,7 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include "space_2d.h"
+#include "geometry/space_2d.h"
 
 #include <memory>
 namespace scl

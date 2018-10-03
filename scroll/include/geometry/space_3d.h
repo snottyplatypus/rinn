@@ -9,8 +9,11 @@ namespace scl
 	class Space3D
 	{
 	public:
+		Space3D();
 		Space3D(double width, double height, double depth);
 		~Space3D();
+
+		void add(T data, double x, double y, double z);
 
 		T& operator()(double x, double y, double z);
 

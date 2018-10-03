@@ -1,7 +1,7 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
-#include "space_3D.h"
+#include "geometry/space_3d.h"
 #include "terrain.h"
 #include <memory>
 
