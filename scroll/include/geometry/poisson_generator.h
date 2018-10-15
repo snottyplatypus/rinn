@@ -163,7 +163,7 @@ namespace scl
 		Circle  - 'true' to fill a circle, 'false' to fill a rectangle
 		MinDist - minimal distance estimator, use negative value for default
 		**/
-		template <typename PRNG = DefaultPRNG>
+		template<typename PRNG = DefaultPRNG>
 		std::vector<Point_2> generatePoissonPoints(size_t NumPoints, PRNG& Generator, int NewPointsCount = 30, bool Circle = true, float MinDist = -1.0f)
 		{
 			if (MinDist < 0.0f)
@@ -214,7 +214,7 @@ namespace scl
 			}
 
 			std::vector<Point_2> points;
-			for each (sPoint el in SamplePoints)
+			for (sPoint el : SamplePoints)
 			{
 				points.push_back(Point_2(el.x, el.y));
 			}

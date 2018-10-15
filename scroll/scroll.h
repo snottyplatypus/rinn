@@ -2,6 +2,7 @@
 #define SCROLL_H
 
 #include <libtcod.hpp>
+#include "include/file/bmp.h"
 #include "include/geometry/pos_2d.h"
 #include "include/geometry/pos_3d.h"
 #include "include/geometry/space_3d.h"
