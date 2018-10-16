@@ -17,19 +17,15 @@ int main()
 	std::cout << "Points generated : " << points.size() << std::endl;
 
 	int ImageSize = 1024;
-	size_t DataSize = 3 * ImageSize * ImageSize;
-	unsigned char* Img = new unsigned char[DataSize];
-	memset(Img, 0, DataSize);
+	scl::file::BMP_Image image(ImageSize, ImageSize);
 
 	for (auto el : points)
 	{
 		int x = int(el.x() * ImageSize);
 		int y = int(el.y() * ImageSize);
-		int Base = 3 * (x + y * ImageSize);
-		Img[Base + 0] = Img[Base + 1] = Img[Base + 2] = 255;
+		image.put(x, y, 0xFFFFFF);
 	}
-	SaveBMP("point_cloud.bmp", Img, ImageSize, ImageSize);
-	delete[](Img);
+	image.save("points.bmp");
 
 	TCODConsole::root->flush();
 	TCODConsole::root->waitForKeypress(true);
