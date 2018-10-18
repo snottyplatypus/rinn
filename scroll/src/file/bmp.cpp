@@ -14,6 +14,11 @@ scl::file::BMP_Image::~BMP_Image()
 {
 }
 
+void scl::file::BMP_Image::clear()
+{
+	std::fill(_buffer.begin(), _buffer.end(), 0x00);
+}
+
 void scl::file::BMP_Image::save(std::string fileName)
 {
 	saveBMP(fileName.c_str(), _buffer.data(), _width, _height);
@@ -32,19 +37,44 @@ void scl::file::BMP_Image::put(int x, int y, int rgb)
 
 void scl::file::BMP_Image::line(int x1, int y1, int x2, int y2, int rgb)
 {
-	float dx = x2 - x1;
-	float dy = y2 - y1;
-	float derr = std::abs(dy / dx);
-	float err = 0.0f;
-	int y = y1;
-	for (int x = x1; x <= x2; x++)
+	const bool steep = (fabs(y2 - y1) > fabs(x2 - x1));
+	if (steep)
 	{
-		put(x, y, rgb);
-		err += derr;
-		if (err >= 0.5f) {
-			int sign_dy = (dy > 0) ? 1 : ((dy < 0) ? -1 : 0);
-			y = y + sign_dy;
-			err -= 1.0f;
+		std::swap(x1, y1);
+		std::swap(x2, y2);
+	}
+
+	if (x1 > x2)
+	{
+		std::swap(x1, x2);
+		std::swap(y1, y2);
+	}
+
+	const double dx = static_cast<double>(x2 - x1);
+	const double dy = fabs(y2 - y1);
+
+	double error = dx / 2.0f;
+	const int ystep = (y1 < y2) ? 1 : -1;
+	int y = (int)y1;
+
+	const int maxX = (int)x2;
+
+	for (int x = (int)x1; x < maxX; x++)
+	{
+		if (steep)
+		{
+			put(y, x, rgb);
+		}
+		else
+		{
+			put(x, y, rgb);
+		}
+
+		error -= dy;
+		if (error < 0)
+		{
+			y += ystep;
+			error += dx;
 		}
 	}
 }

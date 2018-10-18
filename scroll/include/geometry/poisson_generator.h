@@ -9,7 +9,7 @@
 #include <CGAL/Point_2.h>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef K::Point_2 Point_2;
+typedef K::Point_2											Point_2;
 
 namespace scl
 {

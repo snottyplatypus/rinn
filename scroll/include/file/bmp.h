@@ -45,6 +45,7 @@ namespace scl
 			BMP_Image(int width = 0, int height = 0);
 			~BMP_Image();
 
+			void clear();
 			void save(std::string fileName);
 
 			void put(int x, int y, int rgb);
