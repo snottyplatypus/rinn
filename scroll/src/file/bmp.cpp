@@ -79,6 +79,25 @@ void scl::file::BMP_Image::line(int x1, int y1, int x2, int y2, int rgb)
 	}
 }
 
+void scl::file::BMP_Image::poly(std::vector<std::pair<int, int>> points, int rgb_edges)
+{
+	size_t l = points.size() - 1;
+	for (size_t i = 0; i < l; i++)
+		line(points[i].first, points[i].second, points[i + 1].first, points[i + 1].second, rgb_edges);
+	line(points[l].first, points[l].second, points[0].first, points[0].second, rgb_edges);
+}
+
+void scl::file::BMP_Image::poly(std::vector<std::pair<int, int>> points, int rgb_edges, int rgb_vertices)
+{
+	size_t l = points.size() - 1;
+	for (size_t i = 0; i < l; i++)
+		line(points[i].first, points[i].second, points[i + 1].first, points[i + 1].second, rgb_edges);
+	line(points[l].first, points[l].second, points[0].first, points[0].second, rgb_edges);
+
+	for (auto p : points)
+		put(p.first, p.second, rgb_vertices);
+}
+
 std::vector<unsigned char> scl::file::loadBMP(const char* fileName, int* outWidth, int* outHeight)
 {
 	sBMPHeader header;

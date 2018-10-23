@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <utility>
 
 #if defined( __GNUC__ )
 #	define GCC_PACK(n) __attribute__((packed,aligned(n)))
@@ -50,6 +51,8 @@ namespace scl
 
 			void put(int x, int y, int rgb);
 			void line(int x1, int y1, int x2, int y2, int rgb);
+			void poly(std::vector<std::pair<int, int>> points, int rgb_edges);
+			void poly(std::vector<std::pair<int, int>> points, int rgb_edges, int rgb_vertices);
 
 		private:
 			std::vector<unsigned char> _buffer;

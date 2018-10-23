@@ -56,12 +56,7 @@ int main()
 		int y1 = static_cast<int>(t_all.triangle(f)[1].y() * imageSize);
 		int x2 = static_cast<int>(t_all.triangle(f)[2].x() * imageSize);
 		int y2 = static_cast<int>(t_all.triangle(f)[2].y() * imageSize);
-		image.line(x0, y0, x1, y1, color_delaunay);
-		image.line(x1, y1, x2, y2, color_delaunay);
-		image.line(x2, y2, x0, y0, color_delaunay);
-		image.put(x0, y0, color_points);
-		image.put(x1, y1, color_points);
-		image.put(x2, y2, color_points);
+		image.poly({ {x0, y0}, {x1, y1}, {x2, y2} }, color_delaunay, color_points);
 	}
 	image.save("delaunay.bmp");
 
@@ -86,9 +81,7 @@ int main()
 			int y1 = static_cast<int>(t_all.triangle(f)[1].y() * imageSize);
 			int x2 = static_cast<int>(t_all.triangle(f)[2].x() * imageSize);
 			int y2 = static_cast<int>(t_all.triangle(f)[2].y() * imageSize);
-			image.line(x0, y0, x1, y1, 0x0000FF);
-			image.line(x1, y1, x2, y2, 0x0000FF);
-			image.line(x2, y2, x0, y0, 0x0000FF);
+			image.poly({ { x0, y0 },{ x1, y1 },{ x2, y2 } }, 0x0000FF);
 			last_face = line_face_circulator;
 		}
 	} while (++line_face_circulator != first_face);
