@@ -16,7 +16,7 @@ scl::Space3D<T>::~Space3D()
 }
 
 template<class T>
-void scl::Space3D<T>::add(T data, double x, double y, double z)
+void scl::Space3D<T>::add(double x, double y, double z, T data)
 {
 	_data[x + _width * (y + _depth * z)] = data;
 }

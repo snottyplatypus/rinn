@@ -16,7 +16,7 @@ scl::Space2D<T>::~Space2D()
 }
 
 template<class T>
-void scl::Space2D<T>::add(T data, double x, double y)
+void scl::Space2D<T>::add(double x, double y, T data)
 {
 	_data[x + _width * y] = data;
 }

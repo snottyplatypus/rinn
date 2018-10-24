@@ -9,5 +9,13 @@ include_directories(${CEREAL_INCLUDE_DIR})
 include_directories(${CGAL_INCLUDE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/scroll)
 
-add_executable(rinn "rinn.cpp" "rinn.h")
+file(GLOB RINN_SOURCES "src/*.cpp")
+file(GLOB RINN_SOURCES "src/**/*.cpp")
+
+message(STATUS "Rinn sources:")
+message(STATUS ${RINN_SOURCES})
+
+add_executable(rinn "rinn.cpp" ${RINN_SOURCES})
 target_link_libraries(rinn PUBLIC scroll)
+add_executable(data_visualizer "visualizer/data_visualizer.cpp" "visualizer/data_visualizer.h")
+target_link_libraries(data_visualizer PUBLIC scroll)

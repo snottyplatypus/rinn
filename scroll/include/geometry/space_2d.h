@@ -13,7 +13,7 @@ namespace scl
 		Space2D(double width, double height);
 		~Space2D();
 
-		void add(T data, double x, double y);
+		void add(double x, double y, T data);
 
 		T& operator()(double x, double y);
 

@@ -2,8 +2,9 @@
 #define WORLD_H
 
 #include "geometry/space_2d.h"
-
 #include <memory>
+#include <vector>
+
 namespace scl
 {
 	class World

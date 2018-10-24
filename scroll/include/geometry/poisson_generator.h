@@ -71,12 +71,12 @@ namespace scl
 			int y;
 		};
 
-		float getDistance(const sPoint& P1, const sPoint& P2)
+		inline float getDistance(const sPoint& P1, const sPoint& P2)
 		{
 			return sqrt((P1.x - P2.x) * (P1.x - P2.x) + (P1.y - P2.y) * (P1.y - P2.y));
 		}
 
-		sGridPoint imageToGrid(const sPoint& P, float CellSize)
+		inline sGridPoint imageToGrid(const sPoint& P, float CellSize)
 		{
 			return sGridPoint((int)(P.x / CellSize), (int)(P.y / CellSize));
 		}
@@ -128,7 +128,7 @@ namespace scl
 		};
 
 		template <typename PRNG>
-		sPoint popRandom(std::vector<sPoint>& Points, PRNG& Generator)
+		inline sPoint popRandom(std::vector<sPoint>& Points, PRNG& Generator)
 		{
 			const int Idx = Generator.randomInt(static_cast<int>(Points.size()) - 1);
 			const sPoint P = Points[Idx];
@@ -137,7 +137,7 @@ namespace scl
 		}
 
 		template <typename PRNG>
-		sPoint generateRandomPointAround(const sPoint& P, float MinDist, PRNG& Generator)
+		inline sPoint generateRandomPointAround(const sPoint& P, float MinDist, PRNG& Generator)
 		{
 			//start with non-uniform distribution
 			float R1 = Generator.randomFloat();
@@ -164,7 +164,7 @@ namespace scl
 		MinDist - minimal distance estimator, use negative value for default
 		**/
 		template<typename PRNG = DefaultPRNG>
-		std::vector<Point_2> generatePoissonPoints(size_t NumPoints, PRNG& Generator, int NewPointsCount = 30, bool Circle = true, float MinDist = -1.0f)
+		inline std::vector<Point_2> generatePoissonPoints(size_t NumPoints, PRNG& Generator, int NewPointsCount = 30, bool Circle = true, float MinDist = -1.0f)
 		{
 			if (MinDist < 0.0f)
 			{
