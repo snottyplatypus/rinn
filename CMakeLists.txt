@@ -5,6 +5,12 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("rinn")
 
+set(CMAKE_CXX_STANDARD 17)
+if(MSVC)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+endif(MSVC)
+add_definitions(-D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 if(NOT BOOST_ROOT)

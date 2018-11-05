@@ -2,20 +2,12 @@
 #include "worldgen/worldgen.h"
 #include <scroll.h>
 #include <iostream>
-#include <vector>
 #include <ctime>
-#include <algorithm>
-#include <set>
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/json.hpp>
 #include <fstream>
-
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-
-typedef CGAL::Exact_predicates_inexact_constructions_kernel					K;
-typedef K::Point_2															Point_2;
-typedef CGAL::Delaunay_triangulation_2<K>									Delaunay;
+#include <filesystem>
+#include <string>
 
 const int color_points		= 0xFFFFFF;
 const int color_delaunay	= 0x303030;
@@ -25,12 +17,27 @@ int main()
 	scl::System::init();
 	rnn::WorldGen gen;
 	scl::World world = gen.generate();
-	std::ofstream file("../data/world/world_gen.dat", std::ios::binary | std::ios::out);
+
+	std::cout << "Saving world.. ";
+	std::string path = "../data/world";
+	std::string sub_name = "world";
+	int n_world = 1;
+	for (auto & p : std::filesystem::directory_iterator(path)) {
+		std::string f_name = std::filesystem::path(p).filename().string();
+		std::size_t found = f_name.find(sub_name);
+		if (found != std::string::npos)
+			n_world++;
+	}
+	sub_name += std::to_string(n_world);
+	path += "/" + sub_name;
+	std::filesystem::create_directory(path);
+
+	std::ofstream file(path + "/gen.dat", std::ios::binary | std::ios::out);
 	cereal::BinaryOutputArchive archive(file);
-	std::vector<std::pair<double, double>> test;
-	test.push_back(std::pair<double, double>(1.0f, 1.0f));
 	archive(gen);
 	file.close();
+	std::cout << "done" << std::endl;
+
 	/*
 	int imageSize = 1024;
 	scl::file::BMP_Image image(imageSize, imageSize);
