@@ -34,9 +34,9 @@ scl::World rnn::WorldGen::generate()
 
 	std::cout << "Generating slope.. ";
 	timer = clock();
-	Point_2 slope_or(0.0f, 0.0f);
-	Point_2 slope_dr(1.0f, 1.0f);
-	auto line_face_circulator = dl_all.line_walk(slope_or, slope_dr);
+	_slope.push_back(Point_2(0.0f, 0.0f));
+	_slope.push_back(Point_2(1.0f, 1.0f));
+	auto line_face_circulator = dl_all.line_walk(_slope[0], _slope[1]);
 	auto first_face = line_face_circulator;
 	auto last_face = line_face_circulator;
 	std::set<Point_2> slope_graph_set;
@@ -53,8 +53,8 @@ scl::World rnn::WorldGen::generate()
 
 	std::vector<Point_2> slope_graph(slope_graph_set.begin(), slope_graph_set.end());
 	Delaunay dl_slope(slope_graph_set.begin(), slope_graph_set.end());
-	std::vector<Point_2> slope_path = scl::dijkstra(dl_slope, slope_graph);
-	std::reverse(slope_path.begin(), slope_path.end());
+	_slope_path = scl::dijkstra(dl_slope, slope_graph);
+	std::reverse(_slope_path.begin(), _slope_path.end());
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 
 	return scl::World();

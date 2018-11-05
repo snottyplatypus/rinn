@@ -18,10 +18,20 @@ namespace rnn
 		template<class Archive>
 		void save(Archive & ar) const
 		{
-			std::vector<std::pair<double, double>> pos_pair;
+			std::vector<std::pair<double, double>> point_pair;
 			for (auto p : _point_cloud)
-				pos_pair.push_back(std::pair<double, double>(p.x(), p.y()));
-			ar(pos_pair);
+				point_pair.push_back(std::pair<double, double>(p.x(), p.y()));
+			ar(point_pair);
+			
+			std::vector<std::pair<double, double>> slope_pair;
+			for (auto p : _slope)
+				slope_pair.push_back(std::pair<double, double>(p.x(), p.y()));
+			ar(slope_pair);
+
+			std::vector<std::pair<double, double>> path_pair;
+			for (auto p : _slope_path)
+				path_pair.push_back(std::pair<double, double>(p.x(), p.y()));
+			ar(path_pair);
 		}
 
 		template<class Archive>
@@ -31,7 +41,20 @@ namespace rnn
 			ar(pos_pair);
 			for (auto p : pos_pair)
 				_point_cloud.push_back(Point_2(p.first, p.second));
+
+			std::vector<std::pair<double, double>> slope_pair;
+			ar(slope_pair);
+			for (auto p : slope_pair)
+				_slope.push_back(Point_2(p.first, p.second));
+
+			std::vector<std::pair<double, double>> path_pair;
+			ar(path_pair);
+			for (auto p : path_pair)
+				_slope_path.push_back(Point_2(p.first, p.second));
 		}
+
+		std::vector<Point_2> _slope;
+		std::vector<Point_2> _slope_path;
 	};
 }
 

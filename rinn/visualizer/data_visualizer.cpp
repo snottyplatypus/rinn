@@ -22,23 +22,30 @@ int main()
 			n_world++;
 		}
 	}
-	std::string select = "";
-	std::cin >> select;
-	while (std::stoi(select) == 0 || std::stoi(select) > n_world) {
-		std::cout << "Invalid input.." << std::endl;
-		std::cin >> select;
-	}
-	path += "/" + sub_name + select;
 
 	bool data_found = false;
 	std::string data = "gen.dat";
-	for (auto & p : std::filesystem::directory_iterator(path)) {
-		std::string f_name = std::filesystem::path(p).filename().string();
-		std::size_t found = f_name.find(data);
-		if (found != std::string::npos) {
-			std::cout << "Opening data.." << std::endl;
-			data_found = true;
+	std::string select = "";
+	if (n_world > 0) {
+		std::cin >> select;
+		while (std::stoi(select) == 0 || std::stoi(select) > n_world) {
+			std::cout << "Invalid input.." << std::endl;
+			std::cin >> select;
 		}
+		path += "/" + sub_name + select;
+
+		for (auto & p : std::filesystem::directory_iterator(path)) {
+			std::string f_name = std::filesystem::path(p).filename().string();
+			std::size_t found = f_name.find(data);
+			if (found != std::string::npos) {
+				std::cout << "Opening data.." << std::endl;
+				data_found = true;
+			}
+		}
+	}
+	else {
+		std::cout << "No world found." << std::endl;
+		data_found = false;
 	}
 
 	if (data_found) 
@@ -47,6 +54,7 @@ int main()
 		cereal::BinaryInputArchive archive(file);
 		rnn::WorldGen gen;
 		archive(gen);
+
 		path += "/visualizer";
 		std::filesystem::create_directory(path);
 		
@@ -74,9 +82,7 @@ int main()
 		}
 		image.save(path + "/delaunay.bmp");
 
-		Point_2 slope_or(0.0f, 0.0f);
-		Point_2 slope_dr(1.0f, 1.0f);
-		auto line_face_circulator = dl_all.line_walk(slope_or, slope_dr);
+		auto line_face_circulator = dl_all.line_walk(gen._slope[0], gen._slope[1]);
 		auto first_face = line_face_circulator;
 		auto last_face = line_face_circulator;
 		do {
@@ -88,40 +94,27 @@ int main()
 				int y1 = static_cast<int>(dl_all.triangle(f)[1].y() * imageSize);
 				int x2 = static_cast<int>(dl_all.triangle(f)[2].x() * imageSize);
 				int y2 = static_cast<int>(dl_all.triangle(f)[2].y() * imageSize);
-				image.poly({ { x0, y0 },{ x1, y1 },{ x2, y2 } }, 0x0000FF);
+				image.poly({ { x0, y0 }, { x1, y1 }, { x2, y2 } }, 0x0000FF);
 				last_face = line_face_circulator;
 			}
 		} while (++line_face_circulator != first_face);
 
-		std::set<Point_2> slope_graph_set;
-		do {
-			if (!dl_all.is_infinite(line_face_circulator)) {
-				auto f = line_face_circulator.handle();
-				slope_graph_set.insert(dl_all.triangle(f)[0]);
-				slope_graph_set.insert(dl_all.triangle(f)[1]);
-				slope_graph_set.insert(dl_all.triangle(f)[2]);
-				last_face = line_face_circulator;
-			}
-		} while (++line_face_circulator != first_face);
-
-		std::vector<Point_2> slope_graph(slope_graph_set.begin(), slope_graph_set.end());
-		Delaunay dl_slope(slope_graph_set.begin(), slope_graph_set.end());
-		std::vector<Point_2> slope_path = scl::dijkstra(dl_slope, slope_graph);
-		for (int i = 0; i < slope_path.size() - 1; i++)
+		for (int i = 0; i < gen._slope_path.size() - 1; i++)
 		{
-			int x0 = static_cast<int>(slope_path[i].x() * imageSize);
-			int y0 = static_cast<int>(slope_path[i].y() * imageSize);
-			int x1 = static_cast<int>(slope_path[i + 1].x() * imageSize);
-			int y1 = static_cast<int>(slope_path[i + 1].y() * imageSize);
+			int x0 = static_cast<int>(gen._slope_path[i].x() * imageSize);
+			int y0 = static_cast<int>(gen._slope_path[i].y() * imageSize);
+			int x1 = static_cast<int>(gen._slope_path[i + 1].x() * imageSize);
+			int y1 = static_cast<int>(gen._slope_path[i + 1].y() * imageSize);
 			image.line(x0, y0, x1, y1, 0x00FF00);
 		}
-		image.line((int)(slope_or.x() * imageSize), (int)(slope_or.y() * imageSize), (int)(slope_dr.x() * imageSize), (int)(slope_dr.y() * imageSize), 0xFF0000);
+		image.line((int)(gen._slope[0].x() * imageSize), (int)(gen._slope[0].y() * imageSize), (int)(gen._slope[1].x() * imageSize), (int)(gen._slope[1].y() * imageSize), 0xFF0000);
 
 		image.save(path + "/slope.bmp");
 	}
 	else 
 	{
-		std::cout << "Data not found for world" << select << "." << std::endl;
+		if(select.size() > 1)
+			std::cout << "Data not found for world" << select << "." << std::endl;
 	}
 
 	std::cout << "Closing in 5 seconds..";
