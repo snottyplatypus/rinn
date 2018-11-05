@@ -17,5 +17,5 @@ message(STATUS ${RINN_SOURCES})
 
 add_executable(rinn "rinn.cpp" ${RINN_SOURCES})
 target_link_libraries(rinn PUBLIC scroll)
-add_executable(data_visualizer "visualizer/data_visualizer.cpp" "visualizer/data_visualizer.h")
+add_executable(data_visualizer "visualizer/data_visualizer.cpp" ${RINN_SOURCES})
 target_link_libraries(data_visualizer PUBLIC scroll)

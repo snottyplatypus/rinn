@@ -17,7 +17,6 @@ namespace scl
 		virtual ~WorldGen() {}
 		virtual scl::World generate() = 0;
 
-	protected:
 		std::vector<Point_2> _point_cloud;
 	};
 }

@@ -4,13 +4,9 @@
 #include <iostream>
 #include <ctime>
 #include <cereal/archives/binary.hpp>
-#include <cereal/archives/json.hpp>
 #include <fstream>
 #include <filesystem>
 #include <string>
-
-const int color_points		= 0xFFFFFF;
-const int color_delaunay	= 0x303030;
 
 int main()
 {

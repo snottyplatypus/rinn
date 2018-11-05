@@ -7,7 +7,7 @@
 
 namespace rnn
 {
-	class WorldGen : scl::WorldGen
+	class WorldGen : public scl::WorldGen
 	{
 	public:
 		WorldGen();
