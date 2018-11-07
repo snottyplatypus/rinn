@@ -82,23 +82,27 @@ int main()
 		}
 		image.save(path + "/delaunay.bmp");
 
-		auto line_face_circulator = dl_all.line_walk(gen._slope[0], gen._slope[1]);
-		auto first_face = line_face_circulator;
-		auto last_face = line_face_circulator;
-		do {
-			if (!dl_all.is_infinite(line_face_circulator)) {
-				auto f = line_face_circulator.handle();
-				int x0 = static_cast<int>(dl_all.triangle(f)[0].x() * imageSize);
-				int y0 = static_cast<int>(dl_all.triangle(f)[0].y() * imageSize);
-				int x1 = static_cast<int>(dl_all.triangle(f)[1].x() * imageSize);
-				int y1 = static_cast<int>(dl_all.triangle(f)[1].y() * imageSize);
-				int x2 = static_cast<int>(dl_all.triangle(f)[2].x() * imageSize);
-				int y2 = static_cast<int>(dl_all.triangle(f)[2].y() * imageSize);
-				image.poly({ { x0, y0 }, { x1, y1 }, { x2, y2 } }, 0x0000FF);
-				last_face = line_face_circulator;
-			}
-		} while (++line_face_circulator != first_face);
-
+		/*
+		for (int i = 0; i < gen._slope.size() - 1; i++)
+		{
+			auto line_face_circulator = dl_all.line_walk(gen._slope[i], gen._slope[i + 1]);
+			auto first_face = line_face_circulator;
+			auto last_face = line_face_circulator;
+			do {
+				if (!dl_all.is_infinite(line_face_circulator)) {
+					auto f = line_face_circulator.handle();
+					int x0 = static_cast<int>(dl_all.triangle(f)[0].x() * imageSize);
+					int y0 = static_cast<int>(dl_all.triangle(f)[0].y() * imageSize);
+					int x1 = static_cast<int>(dl_all.triangle(f)[1].x() * imageSize);
+					int y1 = static_cast<int>(dl_all.triangle(f)[1].y() * imageSize);
+					int x2 = static_cast<int>(dl_all.triangle(f)[2].x() * imageSize);
+					int y2 = static_cast<int>(dl_all.triangle(f)[2].y() * imageSize);
+					image.poly({ { x0, y0 },{ x1, y1 },{ x2, y2 } }, 0x0000FF);
+					last_face = line_face_circulator;
+				}
+			} while (++line_face_circulator != first_face);
+		}
+		*/
 		for (int i = 0; i < gen._slope_path.size() - 1; i++)
 		{
 			int x0 = static_cast<int>(gen._slope_path[i].x() * imageSize);
@@ -120,5 +124,5 @@ int main()
 	}
 
 	std::cout << "Closing in 5 seconds..";
-	std::this_thread::sleep_for(std::chrono::seconds(5));
+	std::this_thread::sleep_for(std::chrono::seconds(500));
 }

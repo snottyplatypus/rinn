@@ -12,7 +12,7 @@ typedef CGAL::Delaunay_triangulation_2<K>									Delaunay;
 
 namespace scl 
 {
-	std::vector<Point_2> dijkstra(Delaunay t, std::vector<Point_2> graph);
+	std::vector<Point_2> dijkstra(Delaunay t, std::vector<Point_2> graph, Point_2 appr_or, Point_2 appr_dr);
 }
 
 #endif
