@@ -16,7 +16,7 @@ rnn::WorldGen::~WorldGen()
 
 scl::World rnn::WorldGen::generate()
 {
-	scl::PoissonGenerator::DefaultPRNG PRNG;
+	scl::DefaultPRNG PRNG;
 
 	std::cout << "Generating points.. ";
 	std::clock_t timer = clock();
@@ -34,8 +34,27 @@ scl::World rnn::WorldGen::generate()
 
 	std::cout << "Generating slope.. ";
 	timer = clock();
-	_slope.push_back(Point_2(0.0f, 0.0f));
-	_slope.push_back(Point_2(1.0f, 1.0f));
+	if (PRNG.randomFloat() > 0.5f)
+		_slope.push_back(Point_2(PRNG.randomFloat() / 2, 0.0f));
+	else
+		_slope.push_back(Point_2(0.0f, PRNG.randomFloat() / 2));
+
+	for (int i = 0; i < PRNG.randomInt(4); i++)
+		_slope.push_back(Point_2(PRNG.randomFloat(), PRNG.randomFloat()));
+
+	if (PRNG.randomFloat() > 0.5f)
+		_slope.push_back(Point_2(PRNG.randomFloat() / 2 + 0.5f, 1.0f));
+	else
+		_slope.push_back(Point_2(1.0f, PRNG.randomFloat() / 2 + 0.5f));
+
+	std::sort(_slope.begin(), _slope.end(), [&](const Point_2 & a, const Point_2 & b) -> bool
+	{
+		return CGAL::squared_distance(_slope[0], a) < CGAL::squared_distance(_slope[0], b);
+	});
+
+	for (auto i : _slope)
+		std::cout << i << std::endl;
+
 	auto line_face_circulator = dl_all.line_walk(_slope[0], _slope[1]);
 	auto first_face = line_face_circulator;
 	auto last_face = line_face_circulator;

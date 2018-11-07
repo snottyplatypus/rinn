@@ -11,6 +11,7 @@
 #include "include/geometry/poisson_generator.h"
 #include "include/geometry/dijkstra.h"
 #include "include/level.h"
+#include "include/random.h"
 #include "include/renderer.h"
 #include "include/system.h"
 #include "include/terrain.h"

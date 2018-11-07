@@ -2,7 +2,6 @@
 #define POISSON_GENERATOR_H
 
 #include <vector>
-#include <random>
 #include <stdint.h>
 #include <time.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
@@ -15,34 +14,6 @@ namespace scl
 {
 	namespace PoissonGenerator
 	{
-		class DefaultPRNG
-		{
-		public:
-			DefaultPRNG() : m_Gen(std::random_device()()), m_Dis(0.0f, 1.0f)
-			{
-				m_Gen.seed(static_cast<unsigned int>(time(nullptr)));
-			}
-
-			explicit DefaultPRNG(uint32_t seed) : m_Gen(seed), m_Dis(0.0f, 1.0f)
-			{
-			}
-
-			float randomFloat()
-			{
-				return static_cast<float>(m_Dis(m_Gen));
-			}
-
-			int randomInt(int Max)
-			{
-				std::uniform_int_distribution<> DisInt(0, Max);
-				return DisInt(m_Gen);
-			}
-
-		private:
-			std::mt19937 m_Gen;
-			std::uniform_real_distribution<float> m_Dis;
-		};
-
 		struct sPoint
 		{
 			sPoint() : x(0), y(0), m_Valid(false) {}
@@ -163,7 +134,7 @@ namespace scl
 		Circle  - 'true' to fill a circle, 'false' to fill a rectangle
 		MinDist - minimal distance estimator, use negative value for default
 		**/
-		template<typename PRNG = DefaultPRNG>
+		template<typename PRNG = scl::DefaultPRNG>
 		inline std::vector<Point_2> generatePoissonPoints(size_t NumPoints, PRNG& Generator, int NewPointsCount = 30, bool Circle = true, float MinDist = -1.0f)
 		{
 			if (MinDist < 0.0f)

@@ -6,7 +6,7 @@
 
 scl::file::BMP_Image::BMP_Image(int width, int height) : _width(width), _height(height)
 {
-	_buffer.resize(_width * _height * 3);
+	_buffer.resize((_width + 1) * (_height + 1) * 3);
 	std::fill(_buffer.begin(), _buffer.end(), 0x00);
 }
 

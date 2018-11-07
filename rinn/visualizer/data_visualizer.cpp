@@ -107,7 +107,9 @@ int main()
 			int y1 = static_cast<int>(gen._slope_path[i + 1].y() * imageSize);
 			image.line(x0, y0, x1, y1, 0x00FF00);
 		}
-		image.line((int)(gen._slope[0].x() * imageSize), (int)(gen._slope[0].y() * imageSize), (int)(gen._slope[1].x() * imageSize), (int)(gen._slope[1].y() * imageSize), 0xFF0000);
+
+		for(size_t i = 0; i < gen._slope.size() - 1; i++) 
+		image.line((int)(gen._slope[i].x() * imageSize), (int)(gen._slope[i].y() * imageSize), (int)(gen._slope[i + 1].x() * imageSize), (int)(gen._slope[i + 1].y() * imageSize), 0xFF0000);
 
 		image.save(path + "/slope.bmp");
 	}
