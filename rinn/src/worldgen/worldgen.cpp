@@ -21,7 +21,7 @@ scl::World rnn::WorldGen::generate()
 	std::cout << "Generating points.. ";
 	std::clock_t timer = clock();
 	if(_point_cloud.size() == 0)
-		_point_cloud = scl::PoissonGenerator::generatePoissonPoints(10000, PRNG, 10, true, 0.01f);
+		_point_cloud = scl::PoissonGenerator::generatePoissonPoints(10000, PRNG, 10, false, 0.01f);
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 	std::cout << "Points generated : " << _point_cloud.size() << std::endl;
 
@@ -40,7 +40,7 @@ scl::World rnn::WorldGen::generate()
 	else
 		_slope.push_back(Point_2(0.0f, PRNG.randomFloat() / 2));
 
-	for (int i = 0; i < PRNG.randomInt(4); i++)
+	for (int i = 0; i < PRNG.randomInt(3); i++)
 		_slope.push_back(Point_2(PRNG.randomFloat(), PRNG.randomFloat()));
 
 	if (PRNG.randomFloat() > 0.5f)
@@ -73,7 +73,6 @@ scl::World rnn::WorldGen::generate()
 		std::vector<Point_2> temp_slope_path = scl::dijkstra(dl_slope, slope_graph, _slope[i], _slope[i + 1]);
 		std::reverse(temp_slope_path.begin(), temp_slope_path.end());
 		_slope_path.insert(_slope_path.end(), temp_slope_path.begin(), temp_slope_path.end());
-		std::cout << _slope_path.size() << " " << temp_slope_path.size() << std::endl;
 	}
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 

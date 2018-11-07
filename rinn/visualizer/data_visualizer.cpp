@@ -124,5 +124,5 @@ int main()
 	}
 
 	std::cout << "Closing in 5 seconds..";
-	std::this_thread::sleep_for(std::chrono::seconds(500));
+	std::this_thread::sleep_for(std::chrono::seconds(5));
 }

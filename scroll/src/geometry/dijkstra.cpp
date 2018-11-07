@@ -23,9 +23,6 @@ std::vector<Point_2> scl::dijkstra(Delaunay t, std::vector<Point_2> graph, Point
 	auto or_iterator = std::find(graph.begin(), graph.end(), or);
 	auto dr_iterator = std::find(graph.begin(), graph.end(), dr);
 
-	std::cout << or_iterator - graph.begin() << std::endl;
-	std::cout << dr_iterator - graph.begin() << std::endl;
-
 	std::vector<Point_2> nodes(or_iterator, dr_iterator);
 	std::vector<double> dist(nodes.size(), std::numeric_limits<double>::max());
 	std::vector<int> parent(nodes.size());
