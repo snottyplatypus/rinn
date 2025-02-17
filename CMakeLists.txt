@@ -1,42 +1,75 @@
-﻿# CMakeList.txt : Top-level CMake project file, do global configuration
-# and include sub-projects here.
-#
-cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.8)
 
-project ("rinn")
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE
+        "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        CACHE STRING "Vcpkg toolchain file")
+endif()
 
-set(CMAKE_CXX_STANDARD 17)
-if(MSVC)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
-endif(MSVC)
-add_definitions(-D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+set(VCPKG_INSTALL_OPTIONS --no-print-usage) # Suppress vcpkg usage message.
 
-if(NOT BOOST_ROOT)
-	set(BOOST_ROOT ${CMAKE_SOURCE_DIR}/lib/boost)
-endif(NOT BOOST_ROOT)
-set(SDL2_PATH ${CMAKE_SOURCE_DIR}/lib/SDL2)
-set(TCOD_PATH ${CMAKE_SOURCE_DIR}/lib/libtcod)
+project(
+    rinn # Project name, change this as needed.
+    LANGUAGES C CXX
+)
 
-find_package(CGAL REQUIRED)
-find_package(SDL2 REQUIRED)
-set(TCOD_LIBRARY ${TCOD_PATH}/lib/libtcod.lib;${TCOD_PATH}/lib/libtcodgui.lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")  # Keep all runtime files in one directory.
 
-set(TCOD_INCLUDE_DIR ${TCOD_PATH}/include)
-set(CEREAL_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/lib/cereal/include)
-if(NOT CGAL_ROOT)
-	set(CGAL_ROOT ${CMAKE_SOURCE_DIR}/lib/CGAL)
-endif(NOT CGAL_ROOT)
-set(CGAL_INCLUDE_DIR ${CGAL_ROOT}/include)
+include_directories(${PROJECT_SOURCE_DIR}/rinn/include) # Include the header files.
+include_directories(${PROJECT_SOURCE_DIR}/scroll) # Include scroll header files.
 
-include(${CGAL_USE_FILE})
-include(CGAL_CreateSingleSourceCGALProgram)
+file( # Find all source files in the src directory.
+    GLOB_RECURSE SOURCE_FILES
+    CONFIGURE_DEPENDS  # Automatically reconfigure if source files are added/removed.
+    ${PROJECT_SOURCE_DIR}/rinn/src/*.cpp
+)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin)
+# Add executables.
+add_executable(rinn "rinn/rinn.cpp" ${SOURCE_FILES})
+add_executable(data_visualizer "tools/data_visualizer.cpp" ${SOURCE_FILES})
+
+# Ensure the C++23 standard is available.
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
+
+# Enforce UTF-8 encoding on MSVC.
+if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
+endif()
+
+# Enable warnings recommended for new projects.
+if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
+endif()
 
 # Include sub-projects.
 add_subdirectory ("scroll")
-add_subdirectory ("rinn")
+
+# Link libraries.
+find_package(SDL2 CONFIG REQUIRED)
+find_package(libtcod CONFIG REQUIRED)
+find_package(CGAL CONFIG REQUIRED)
+find_package(cereal CONFIG REQUIRED)
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE
+        SDL2::SDL2
+        SDL2::SDL2main
+        libtcod::libtcod
+		CGAL::CGAL
+		cereal::cereal
+        scroll
+)
+target_link_libraries(
+    data_visualizer
+    PRIVATE
+        SDL2::SDL2
+        SDL2::SDL2main
+        libtcod::libtcod
+		CGAL::CGAL
+		cereal::cereal
+        scroll
+)

@@ -1,18 +1,31 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-project("scroll")
+project(scroll)
 
-include_directories(./include)
-include_directories(${SDL2_INCLUDE_DIR})
-include_directories(${TCOD_INCLUDE_DIR})
-include_directories(${CEREAL_INCLUDE_DIR})
-include_directories(${CGAL_INCLUDE_DIR})
+# Include the header files.
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
-file(GLOB SCROLL_SOURCES "src/*.cpp")
-file(GLOB SCROLL_SOURCES "src/**/*.cpp")
+# Find all source files in the src directory.
+file(
+    GLOB_RECURSE SOURCE_FILES
+    CONFIGURE_DEPENDS  # Automatically reconfigure if source files are added/removed.
+    ${PROJECT_SOURCE_DIR}/*.cpp
+)
+# This will create a static library named scroll.
+add_library(scroll STATIC ${SOURCE_FILES})
 
-message(STATUS "Scroll sources:")
-message(STATUS ${SCROLL_SOURCES})
+# Link libraries.
+find_package(SDL2 CONFIG REQUIRED)
+find_package(libtcod CONFIG REQUIRED)
+find_package(CGAL CONFIG REQUIRED)
+find_package(cereal CONFIG REQUIRED)
 
-add_library(scroll STATIC ${SCROLL_SOURCES})
-target_link_libraries(scroll ${SDL2_LIBRARY} ${TCOD_LIBRARY} CGAL::CGAL)
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE
+        SDL2::SDL2
+        SDL2::SDL2main
+        libtcod::libtcod
+		CGAL::CGAL
+		cereal::cereal
+)
