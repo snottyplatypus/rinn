@@ -5,7 +5,7 @@
 static int find_min_dist(std::vector<double> dist, std::vector<bool> ptSet)
 {
 	double min = std::numeric_limits<double>::max();
-	int min_index;
+	int min_index = 0;
 	for (int v = 0; v < dist.size(); v++)
 	{
 		if (ptSet[v] == false && dist[v] < min) {
@@ -22,6 +22,9 @@ std::vector<Point_2> scl::dijkstra(Delaunay t, std::vector<Point_2> graph, Point
 	Point_2 dr = t.nearest_vertex(appr_dr)->point();
 	auto or_iterator = std::find(graph.begin(), graph.end(), or);
 	auto dr_iterator = std::find(graph.begin(), graph.end(), dr);
+
+	if (or_iterator > dr_iterator)
+		std::swap(or_iterator, dr_iterator);
 
 	std::vector<Point_2> nodes(or_iterator, dr_iterator);
 	std::vector<double> dist(nodes.size(), std::numeric_limits<double>::max());

@@ -18,6 +18,13 @@ namespace scl
 		virtual scl::World generate() = 0;
 
 		std::vector<Point_2> _point_cloud;
+
+	protected:
+		struct data_config
+		{
+			int _slope_min;
+			int _slope_max;
+		} _data_config;
 	};
 }
 

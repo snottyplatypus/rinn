@@ -1,0 +1,6 @@
+{
+  "worldgen": {
+    "slope_min": 3,
+    "slope_max": 10
+  }
+}

@@ -27,10 +27,16 @@ int main()
 	std::string data = "gen.dat";
 	std::string select = "";
 	if (n_world > 0) {
-		std::cin >> select;
-		while (std::stoi(select) == 0 || std::stoi(select) > n_world) {
-			std::cout << "Invalid input.." << std::endl;
+		bool i = false;
+		while (!i) {
 			std::cin >> select;
+			//i is false if select is not a number or if it's a number but not between 1 and n_world
+			i = std::all_of(select.begin(), select.end(), [](unsigned char c) { return std::isdigit(c); });
+			if (!i || i && (std::stoi(select) == 0 || std::stoi(select) > n_world)) {
+				i = false;
+				std::cout << "Invalid input, please enter a number between 1 and " << n_world << std::endl;
+			}
+
 		}
 		path += "/" + sub_name + select;
 
@@ -54,9 +60,6 @@ int main()
 		cereal::BinaryInputArchive archive(file);
 		rnn::WorldGen gen;
 		archive(gen);
-
-		path += "/visualizer";
-		std::filesystem::create_directory(path);
 		
 		scl::file::BMP_Image image(imageSize, imageSize);
 

@@ -14,7 +14,8 @@ namespace rnn
 		~WorldGen();
 
 		scl::World generate() override;
-
+		Point_2 random_point_on_edge(scl::DefaultPRNG PRNG);
+		
 		template<class Archive>
 		void save(Archive & ar) const
 		{

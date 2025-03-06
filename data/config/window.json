@@ -1,17 +1,15 @@
 {
-    "window": 
-    {
-        "width": 1400,
-        "height": 750,
-        "fullscreen": false
-    },
+  "window": {
+    "width": 1400,
+    "height": 750,
+    "fullscreen": false
+  },
 
-    "font":
-    {
-        "name": "font10x10.png",
-        "width": 10,
-        "height": 10,
-        "col": 16,
-        "row": 16
-    }
+  "font": {
+    "name": "font10x10.png",
+    "width": 10,
+    "height": 10,
+    "col": 16,
+    "row": 16
+  }
 }
