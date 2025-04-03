@@ -24,6 +24,11 @@ namespace scl
 		{
 			int _slope_min;
 			int _slope_max;
+
+			template <class Archive> void serialize(Archive& ar)
+			{
+				ar(_slope_min, _slope_max);
+			}
 		} _data_config;
 	};
 }

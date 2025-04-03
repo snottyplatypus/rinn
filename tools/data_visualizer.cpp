@@ -63,7 +63,7 @@ int main()
 		
 		scl::file::BMP_Image image(imageSize, imageSize);
 
-		for (auto el : gen._point_cloud)
+		for (auto &el : gen._point_cloud)
 		{
 			int x = static_cast<int>(el.x() * imageSize);
 			int y = static_cast<int>(el.y() * imageSize);
