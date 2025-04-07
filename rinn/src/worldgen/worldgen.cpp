@@ -48,33 +48,46 @@ scl::World rnn::WorldGen::generate()
 	std::cout << "Generating slope.. ";
 	timer = clock();
 	
-	_slope.push_back(random_point_on_edge(PRNG));
+	std::vector<Point_2> unsorted_slope;
+	unsorted_slope.push_back(random_point_on_edge(PRNG));
 	for (int i = 0; i < _data_config._slope_min + PRNG.randomInt(_data_config._slope_max - _data_config._slope_min); i++)
-		_slope.push_back(Point_2(PRNG.randomFloat(), PRNG.randomFloat()));
-	_slope.push_back(random_point_on_edge(PRNG));
+		unsorted_slope.push_back(Point_2(PRNG.randomFloat(), PRNG.randomFloat()));
+	unsorted_slope.push_back(random_point_on_edge(PRNG));
 
-	//Sort slope points by distance to the first point
-	std::sort(_slope.begin(), _slope.end(), [&](const Point_2 & a, const Point_2 & b) -> bool
+	//Sort slope points by distance to the first point and do it for all points
+	while(!unsorted_slope.empty()) 
 	{
-		return CGAL::squared_distance(_slope[0], a) < CGAL::squared_distance(_slope[0], b);
-	});
+		std::sort(unsorted_slope.begin(), unsorted_slope.end(), [&](const Point_2& a, const Point_2& b) -> bool
+			{
+				return CGAL::squared_distance(unsorted_slope[0], a) < CGAL::squared_distance(unsorted_slope[0], b);
+			});
+		_slope.push_back(unsorted_slope[0]);
+		unsorted_slope.erase(unsorted_slope.begin());
+	}
 
 	//Generate slope path
-	for (size_t i = 0; i < _slope.size() - 1; i++) 
+	for (size_t i = 0; i < _slope.size() - 1; i++)
 	{
 		std::set<Point_2> slope_graph_set;
 		auto line_face_circulator = dl_all.line_walk(_slope[i], _slope[i + 1]);
 		auto first_face = line_face_circulator;
 		auto last_face = line_face_circulator;
-		do {
-			if (!dl_all.is_infinite(line_face_circulator)) {
-				auto f = line_face_circulator.handle();
-				slope_graph_set.insert(dl_all.triangle(f)[0]);
-				slope_graph_set.insert(dl_all.triangle(f)[1]);
-				slope_graph_set.insert(dl_all.triangle(f)[2]);
-				last_face = line_face_circulator;
-			}
-		} while (++line_face_circulator != first_face);
+		try {
+			do {
+				if (line_face_circulator != nullptr) {
+					if (!dl_all.is_infinite(line_face_circulator)) {
+						auto f = line_face_circulator.handle();
+						slope_graph_set.insert(dl_all.triangle(f)[0]);
+						slope_graph_set.insert(dl_all.triangle(f)[1]);
+						slope_graph_set.insert(dl_all.triangle(f)[2]);
+						last_face = line_face_circulator;
+					}
+				}
+			} while (++line_face_circulator != first_face);
+		}
+		catch (CGAL::Precondition_exception& e) {
+			std::cerr << "Error: " << e.what() << std::endl;
+		}
 		std::vector<Point_2> slope_graph(slope_graph_set.begin(), slope_graph_set.end());
 		Delaunay dl_slope(slope_graph_set.begin(), slope_graph_set.end());
 		std::vector<Point_2> temp_slope_path = scl::dijkstra(dl_slope, slope_graph, _slope[i], _slope[i + 1]);

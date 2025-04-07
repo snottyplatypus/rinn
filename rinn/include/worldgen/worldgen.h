@@ -15,6 +15,8 @@ namespace rnn
 
 		scl::World generate() override;
 		Point_2 random_point_on_edge(scl::DefaultPRNG PRNG);
+		std::vector<Point_2> _slope;
+		std::vector<Point_2> _slope_path;
 		
 		template<class Archive>
 		void save(Archive & ar) const
@@ -53,9 +55,6 @@ namespace rnn
 			for (auto p : path_pair)
 				_slope_path.push_back(Point_2(p.first, p.second));
 		}
-
-		std::vector<Point_2> _slope;
-		std::vector<Point_2> _slope_path;
 	};
 }
 

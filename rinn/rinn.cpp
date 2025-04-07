@@ -39,7 +39,7 @@ int main()
 	archive(gen);
 	file.close();
 
-	std::cout << "done" << std::endl;
+	std::cout << "done at " << path << std::endl;
 
 	TCODConsole::root->flush();
 	TCODConsole::root->waitForKeypress(true);

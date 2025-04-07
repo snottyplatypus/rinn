@@ -18,6 +18,9 @@ static int find_min_dist(std::vector<double> dist, std::vector<bool> ptSet)
 
 std::vector<Point_2> scl::dijkstra(Delaunay t, std::vector<Point_2> graph, Point_2 appr_or, Point_2 appr_dr)
 {
+	if (t.number_of_vertices() == 0 || graph.empty())
+		return {};
+
 	Point_2 or = t.nearest_vertex(appr_or)->point();
 	Point_2 dr = t.nearest_vertex(appr_dr)->point();
 	auto or_iterator = std::find(graph.begin(), graph.end(), or);
