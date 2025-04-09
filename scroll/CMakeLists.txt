@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.20)
 
 project(scroll)
 
@@ -11,6 +11,7 @@ file(
     CONFIGURE_DEPENDS  # Automatically reconfigure if source files are added/removed.
     ${PROJECT_SOURCE_DIR}/*.cpp
 )
+
 # This will create a static library named scroll.
 add_library(scroll STATIC ${SOURCE_FILES})
 
