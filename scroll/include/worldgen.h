@@ -22,12 +22,25 @@ namespace scl
 	protected:
 		struct data_config
 		{
+			int _seed;
 			int _slope_min;
 			int _slope_max;
 
+			struct _boundaries
+			{
+				float _x_min;
+				float _x_max;
+				float _y_min;
+				float _y_max;
+				template <class Archive> void serialize(Archive& ar)
+				{
+					ar(_x_min, _x_max, _y_min, _y_max);
+				}
+			} _boundaries;
+
 			template <class Archive> void serialize(Archive& ar)
 			{
-				ar(_slope_min, _slope_max);
+				ar(_seed, _boundaries, _slope_min, _slope_max);
 			}
 		} _data_config;
 	};

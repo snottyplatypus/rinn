@@ -1,7 +1,7 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 
-#include <random>
+#include <random> 
 
 namespace scl
 {
@@ -17,9 +17,20 @@ namespace scl
 		{
 		}
 
+		void seed(uint32_t seed)
+		{
+			_gen.seed(seed);
+		}
+
 		float randomFloat()
 		{
 			return static_cast<float>(_dis(_gen));
+		}
+
+		float randomFloat(float min, float max)
+		{
+			std::uniform_real_distribution<float> dis(min, max);
+			return dis(_gen);
 		}
 
 		int randomInt(int max)

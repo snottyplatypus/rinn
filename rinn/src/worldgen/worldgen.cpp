@@ -27,6 +27,10 @@ scl::World rnn::WorldGen::generate()
 	std::ifstream file("../data/config/worldgen.json");
 	cereal::JSONInputArchive archive(file);
 	archive(cereal::make_nvp("worldgen", _data_config));
+	if (_data_config._seed >= 0) {
+		PRNG.seed(static_cast<uint32_t>(_data_config._seed));
+		std::cout << "Using seed : " << _data_config._seed << std::endl;
+	}
 
 	std::cout << "Generating points.. ";
 	std::clock_t timer = clock();
@@ -51,9 +55,9 @@ scl::World rnn::WorldGen::generate()
 	std::vector<Point_2> unsorted_slope;
 	unsorted_slope.push_back(random_point_on_edge(PRNG));
 	for (int i = 0; i < _data_config._slope_min + PRNG.randomInt(_data_config._slope_max - _data_config._slope_min); i++)
-		unsorted_slope.push_back(Point_2(PRNG.randomFloat(), PRNG.randomFloat()));
+		unsorted_slope.push_back(random_point(PRNG));
 	unsorted_slope.push_back(random_point_on_edge(PRNG));
-
+	
 	//Sort slope points by distance to the first point and do it for all points
 	while(!unsorted_slope.empty()) 
 	{
@@ -91,7 +95,6 @@ scl::World rnn::WorldGen::generate()
 		std::vector<Point_2> slope_graph(slope_graph_set.begin(), slope_graph_set.end());
 		Delaunay dl_slope(slope_graph_set.begin(), slope_graph_set.end());
 		std::vector<Point_2> temp_slope_path = scl::dijkstra(dl_slope, slope_graph, _slope[i], _slope[i + 1]);
-		std::reverse(temp_slope_path.begin(), temp_slope_path.end());
 		_slope_path.insert(_slope_path.end(), temp_slope_path.begin(), temp_slope_path.end());
 	}
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
@@ -100,19 +103,33 @@ scl::World rnn::WorldGen::generate()
 }
 
 /*
-	This function generate a random point on the edge of the generated world
+	This function generate a random point in the generated world inside boundaries
+*/
+Point_2 rnn::WorldGen::random_point(scl::DefaultPRNG PRNG)
+{
+	float r_x_min = 0.0f + _data_config._boundaries._x_min;
+	float r_x_max = 1.0f - _data_config._boundaries._x_max;
+	float r_y_min = 0.0f + _data_config._boundaries._y_min;
+	float r_y_max = 1.0f - _data_config._boundaries._y_max;
+	return Point_2(PRNG.randomFloat(r_x_min, r_x_max), PRNG.randomFloat(r_y_min, r_y_max));
+}
+
+/*
+	This function generate a random point on the edge of the generated world inside boundaries
 */
 Point_2 rnn::WorldGen::random_point_on_edge(scl::DefaultPRNG PRNG)
 {
-	if (PRNG.randomFloat() < 0.5f)
-		if (PRNG.randomFloat() < 0.25f)
-			return Point_2(PRNG.randomFloat(), 0.0f);
+	float r_x = PRNG.randomFloat(0.0f + _data_config._boundaries._x_min, 1.0f - _data_config._boundaries._x_max);
+	float r_y = PRNG.randomFloat(0.0f + _data_config._boundaries._y_min, 1.0f - _data_config._boundaries._y_max);
+	float p = PRNG.randomFloat();
+	if (p < 0.5f)
+		if (p < 0.25f)
+			return Point_2(r_x, 0.0f + _data_config._boundaries._y_min);
 		else
-			return Point_2(PRNG.randomFloat(), 1.0f);
+			return Point_2(r_x, 1.0f - _data_config._boundaries._x_max);
 	else
-		if (PRNG.randomFloat() < 0.75f)
-			return Point_2(0.0f, PRNG.randomFloat());
+		if (p < 0.75f)
+			return Point_2(0.0f + _data_config._boundaries._x_min, r_y);
 		else
-			return Point_2(1.0f, PRNG.randomFloat());
+			return Point_2(1.0f - _data_config._boundaries._x_max, r_y);
 }
-

@@ -14,6 +14,7 @@ namespace rnn
 		~WorldGen();
 
 		scl::World generate() override;
+		Point_2 random_point(scl::DefaultPRNG PRNG);
 		Point_2 random_point_on_edge(scl::DefaultPRNG PRNG);
 		std::vector<Point_2> _slope;
 		std::vector<Point_2> _slope_path;
