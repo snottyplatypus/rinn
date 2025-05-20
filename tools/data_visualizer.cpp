@@ -18,16 +18,16 @@ static void draw_points(const std::vector<Point_2>& points, const std::string& p
 	}
 }
 
-static void draw_delaunay(const Delaunay& dl_all, const std::string& path, scl::file::BMP_Image& image, int color)
+static void draw_delaunay(const Delaunay& dl, const std::string& path, scl::file::BMP_Image& image, int color)
 {
-	for (auto f = dl_all.faces_begin(); f != dl_all.faces_end(); f++)
+	for (auto f = dl.faces_begin(); f != dl.faces_end(); f++)
 	{
-		int x0 = static_cast<int>(dl_all.triangle(f)[0].x() * IMAGE_SIZE);
-		int y0 = static_cast<int>(dl_all.triangle(f)[0].y() * IMAGE_SIZE);
-		int x1 = static_cast<int>(dl_all.triangle(f)[1].x() * IMAGE_SIZE);
-		int y1 = static_cast<int>(dl_all.triangle(f)[1].y() * IMAGE_SIZE);
-		int x2 = static_cast<int>(dl_all.triangle(f)[2].x() * IMAGE_SIZE);
-		int y2 = static_cast<int>(dl_all.triangle(f)[2].y() * IMAGE_SIZE);
+		int x0 = static_cast<int>(dl.triangle(f)[0].x() * IMAGE_SIZE);
+		int y0 = static_cast<int>(dl.triangle(f)[0].y() * IMAGE_SIZE);
+		int x1 = static_cast<int>(dl.triangle(f)[1].x() * IMAGE_SIZE);
+		int y1 = static_cast<int>(dl.triangle(f)[1].y() * IMAGE_SIZE);
+		int x2 = static_cast<int>(dl.triangle(f)[2].x() * IMAGE_SIZE);
+		int y2 = static_cast<int>(dl.triangle(f)[2].y() * IMAGE_SIZE);
 		image.poly({ { x0, y0 },{ x1, y1 },{ x2, y2 } }, COLOR_DELAUNAY, color);
 	}
 }
@@ -94,11 +94,9 @@ static void draw_voronoi(const Delaunay& dl, const std::string& path, scl::file:
 		const Point_2& p1 = f->vertex(0)->point();
 		const Point_2& p2 = f->vertex(1)->point();
 		const Point_2& p3 = f->vertex(2)->point();
-
 		//Simple arithmetic mean as an approximation for display purposes
 		double center_x_d = (p1.x() + p2.x() + p3.x()) / 3.0;
 		double center_y_d = (p1.y() + p2.y() + p3.y()) / 3.0;
-
 		//Convert to image coordinates
 		int center_x = static_cast<int>(center_x_d * IMAGE_SIZE);
 		int center_y = static_cast<int>(center_y_d * IMAGE_SIZE);
@@ -136,12 +134,28 @@ static void draw_voronoi(const Delaunay& dl, const std::string& path, scl::file:
 				if (center_x >= 0 && center_x < IMAGE_SIZE &&
 					center_y >= 0 && center_y < IMAGE_SIZE &&
 					neighbor_x >= 0 && neighbor_x < IMAGE_SIZE &&
-					neighbor_y >= 0 && neighbor_y < IMAGE_SIZE) {
+					neighbor_y >= 0 && neighbor_y < IMAGE_SIZE)
+				{
 					image.line(center_x, center_y, neighbor_x, neighbor_y, color);
 					drawn_edges.insert(edge);
 				}
 			}
 		}
+	}
+}
+
+static void draw_points_terrain(rnn::WorldGen& gen, const std::string& path, scl::file::BMP_Image& image)
+{
+	for (size_t i = 0; i < gen._point_cloud.size(); i++)
+	{
+		int x = static_cast<int>(gen._point_cloud[i].x() * IMAGE_SIZE);
+		int y = static_cast<int>(gen._point_cloud[i].y() * IMAGE_SIZE);
+		if(gen._terrain[i] == 0)
+			image.put(x, y, BLUE);
+		else if (gen._terrain[i] == 2)
+			image.put(x, y, GREEN);
+		else
+			image.put(x, y, WHITE);
 	}
 }
 
@@ -210,6 +224,10 @@ int main()
 		draw_slope(gen._slope, path, image, RED);
 		draw_slope_path(gen._slope_path, path, image, YELLOW);
 		image.save(path + "/path.bmp");
+		image.clear();
+		draw_slope_path(gen._slope_path, path, image, YELLOW);
+		draw_points_terrain(gen, path, image);
+		image.save(path + "/terrain.bmp");
 		draw_voronoi(dl_all, path, image, AQUA);
 		image.save(path + "/voronoi.bmp");
 	}

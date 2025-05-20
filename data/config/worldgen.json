@@ -7,7 +7,10 @@
       "y_min": 0.1,
       "y_max": 0.1
     },
+    "points_min_distance": 0.01,
     "slope_min": 2,
-    "slope_max": 100
+    "slope_max": 100,
+    "land_threshold": 10.0,
+    "land_probability": 0.5
   }
 }

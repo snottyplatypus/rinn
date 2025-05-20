@@ -14,10 +14,13 @@ namespace rnn
 		~WorldGen();
 
 		scl::World generate() override;
-		Point_2 random_point(scl::DefaultPRNG PRNG);
-		Point_2 random_point_on_edge(scl::DefaultPRNG PRNG);
+		Point_2 random_point(scl::DefaultPRNG& PRNG);
+		Point_2 random_point_on_edge(scl::DefaultPRNG& PRNG);
+		std::vector<int> mark_points_by_path_proximity(const Delaunay& dl, const std::vector<Point_2>& points, const std::vector<Point_2>& path, scl::DefaultPRNG& PRNG);
+
 		std::vector<Point_2> _slope;
 		std::vector<Point_2> _slope_path;
+		std::vector<int> _terrain;
 		
 		template<class Archive>
 		void save(Archive & ar) const
@@ -36,6 +39,8 @@ namespace rnn
 			for (auto p : _slope_path)
 				path_pair.push_back(std::pair<double, double>(p.x(), p.y()));
 			ar(path_pair);
+
+			ar(_terrain);
 		}
 
 		template<class Archive>
@@ -55,6 +60,8 @@ namespace rnn
 			ar(path_pair);
 			for (auto p : path_pair)
 				_slope_path.push_back(Point_2(p.first, p.second));
+
+			ar(_terrain);
 		}
 	};
 }

@@ -23,8 +23,11 @@ namespace scl
 		struct data_config
 		{
 			int _seed;
+			float _points_min_dist;
 			int _slope_min;
 			int _slope_max;
+			float _land_threshold;
+			float _land_probability;
 
 			struct _boundaries
 			{
@@ -40,7 +43,7 @@ namespace scl
 
 			template <class Archive> void serialize(Archive& ar)
 			{
-				ar(_seed, _boundaries, _slope_min, _slope_max);
+				ar(_seed, _boundaries, _points_min_dist, _slope_min, _slope_max, _land_threshold, _land_probability);
 			}
 		} _data_config;
 	};
