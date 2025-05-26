@@ -17,8 +17,10 @@ namespace scl
 		virtual ~WorldGen() {}
 		virtual scl::World generate() = 0;
 
+
 		std::vector<Point_2> _point_cloud;
 		std::unordered_map<Delaunay::Vertex_handle, size_t> _points_index_map;
+		Delaunay _dl;
 
 	protected:
 		struct data_config

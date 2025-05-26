@@ -21,8 +21,8 @@ namespace rnn
 		std::vector<int> _terrain;
 
 	protected:
-		std::vector<int> mark_points_by_path_proximity(const Delaunay& dl, scl::DefaultPRNG& PRNG);
-		void create_elevation(const Delaunay& dl);
+		std::vector<int> mark_points_by_path_proximity(scl::DefaultPRNG& PRNG);
+		void create_elevation();
 		
 	public:
 		template<class Archive>
@@ -54,6 +54,14 @@ namespace rnn
 			for (auto p : pos_pair)
 				_point_cloud.push_back(Point_2(p.first, p.second));
 
+			_dl.insert(_point_cloud.begin(), _point_cloud.end());
+
+			for (auto& vh : _dl.finite_vertex_handles()) {
+				auto it = std::find(_point_cloud.begin(), _point_cloud.end(), vh->point());
+				size_t idx = std::distance(_point_cloud.begin(), it);
+				_points_index_map[vh] = idx;
+			}
+
 			std::vector<std::pair<double, double>> slope_pair;
 			ar(slope_pair);
 			for (auto p : slope_pair)
@@ -64,7 +72,7 @@ namespace rnn
 			for (auto p : path_pair)
 				_slope_path.push_back(Point_2(p.first, p.second));
 
-			ar(_terrain);
+			ar(_terrain);	
 		}
 	};
 }

@@ -42,11 +42,17 @@ scl::World rnn::WorldGen::generate()
 
 	std::cout << "Triangulating points.. ";
 	timer = clock();
-	Delaunay dl_all;
 	//Triangulate all points using Delaunay triangulation
-	dl_all.insert(_point_cloud.begin(), _point_cloud.end());
+	_dl.insert(_point_cloud.begin(), _point_cloud.end());
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
-	std::cout << "Faces generated : " << dl_all.number_of_faces() << std::endl;
+	std::cout << "Faces generated : " << _dl.number_of_faces() << std::endl;
+
+	//Create points index map for future usage
+	for (auto& vh : _dl.finite_vertex_handles()) {
+		auto it = std::find(_point_cloud.begin(), _point_cloud.end(), vh->point());
+		size_t idx = std::distance(_point_cloud.begin(), it);
+		_points_index_map[vh] = idx;
+	}
 
 	//Generate slope from one edge to another
 	std::cout << "Generating slope.. ";
@@ -72,17 +78,17 @@ scl::World rnn::WorldGen::generate()
 	for (size_t i = 0; i < _slope.size() - 1; i++)
 	{
 		std::set<Point_2> slope_graph_set;
-		auto line_face_circulator = dl_all.line_walk(_slope[i], _slope[i + 1]);
+		auto line_face_circulator = _dl.line_walk(_slope[i], _slope[i + 1]);
 		auto first_face = line_face_circulator;
 		auto last_face = line_face_circulator;
 		try {
 			do {
 				if (line_face_circulator != nullptr) {
-					if (!dl_all.is_infinite(line_face_circulator)) {
+					if (!_dl.is_infinite(line_face_circulator)) {
 						auto f = line_face_circulator.handle();
-						slope_graph_set.insert(dl_all.triangle(f)[0]);
-						slope_graph_set.insert(dl_all.triangle(f)[1]);
-						slope_graph_set.insert(dl_all.triangle(f)[2]);
+						slope_graph_set.insert(_dl.triangle(f)[0]);
+						slope_graph_set.insert(_dl.triangle(f)[1]);
+						slope_graph_set.insert(_dl.triangle(f)[2]);
 						last_face = line_face_circulator;
 					}
 				}
@@ -98,23 +104,16 @@ scl::World rnn::WorldGen::generate()
 	}
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 
-	//Create points index map for future usage
-	for (auto& vh : dl_all.finite_vertex_handles()) {
-		auto it = std::find(_point_cloud.begin(), _point_cloud.end(), vh->point());
-		size_t idx = std::distance(_point_cloud.begin(), it);
-		_points_index_map[vh] = idx;
-	}
-
 	//Generate terrain around path
 	std::cout << "Generating terrain.. ";
 	timer = clock();
-	_terrain = mark_points_by_path_proximity(dl_all, PRNG);
+	_terrain = mark_points_by_path_proximity(PRNG);
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 
 	//Create elevation
 	std::cout << "Generating elevation.. ";
 	timer = clock();
-	create_elevation(dl_all);
+	create_elevation();
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 
 	return scl::World();
@@ -158,7 +157,7 @@ Point_2 rnn::WorldGen::random_point_on_edge(scl::DefaultPRNG& PRNG)
 	- Points that are within a certain distance from the path are marked as 2 (land) depending on a fixed probability and threshold
 	- Points that are not within distance are marked as 1 (sea)
 */
-std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(const Delaunay& dl, scl::DefaultPRNG& PRNG)
+std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& PRNG)
 {
 	std::vector<int> point_marks(_point_cloud.size(), -3); // Default mark is -3 (void)
 
@@ -189,12 +188,12 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(const Delaunay& dl
 		//Remove the point from the queue by swapping with the last element and popping
 		std::swap(queue[random_index], queue.back());
 		queue.pop_back();
-		auto vertex_handle = dl.nearest_vertex(_point_cloud[point_idx]);
+		auto vertex_handle = _dl.nearest_vertex(_point_cloud[point_idx]);
 		// Check all neighbors
-		auto neighbor_vertices = dl.incident_vertices(vertex_handle);
+		auto neighbor_vertices = _dl.incident_vertices(vertex_handle);
 		auto first = neighbor_vertices;
 		do {
-			if (dl.is_infinite(neighbor_vertices))
+			if (_dl.is_infinite(neighbor_vertices))
 				continue;
 
 			size_t neighbor_idx = _points_index_map[neighbor_vertices];
@@ -208,7 +207,7 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(const Delaunay& dl
 				if (point_marks[i] != 1 || i == point_idx)
 					continue;
 
-				//If within threshold distance, mark as land
+				//If within threshold distance, mark as land with a fixed probability
 				auto sq_dist = CGAL::squared_distance(_point_cloud[point_idx], _point_cloud[i]);
 				bool land_pb = PRNG.randomFloat(0.0f, 1.0f) < _data_config._land_probability;
 				if (sq_dist < (_data_config._points_min_dist * _data_config._points_min_dist * _data_config._land_threshold) && land_pb) {
@@ -222,23 +221,23 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(const Delaunay& dl
 	return point_marks;
 }
 
-void rnn::WorldGen::create_elevation(const Delaunay& dl)
+void rnn::WorldGen::create_elevation()
 {
 	for (size_t i = 0; i < _terrain.size(); i++) {
-		auto vertex_handle = dl.nearest_vertex(_point_cloud[i]);
+		auto vertex_handle = _dl.nearest_vertex(_point_cloud[i]);
 		// Check all neighbors
-		auto neighbor = dl.incident_vertices(vertex_handle);
+		auto neighbor = _dl.incident_vertices(vertex_handle);
 		auto first = neighbor;
 		do {
-			if (dl.is_infinite(neighbor))
+			if (_dl.is_infinite(neighbor))
 				continue;
 
 			size_t neighbor_idx = _points_index_map[neighbor];
-			if (_terrain[i] < 0 && _terrain[neighbor_idx] > 0) {
+			if (_terrain[i] < 0 && _terrain[neighbor_idx] >= 0) {
 				//If current point is sea and neighbor is terrain, mark as shore and neighbor as beach
 				_terrain[i] = -1;
 				_terrain[neighbor_idx] = 0; break;
-			} else if (_terrain[i] > 0 && _terrain[neighbor_idx] < 0) {
+			} else if (_terrain[i] >= 0 && _terrain[neighbor_idx] < 0) {
 				//If current point is land and neighbor is shore, mark as beach
 				_terrain[i] = 0;
 				_terrain[neighbor_idx] = -1; break;

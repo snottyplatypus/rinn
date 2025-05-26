@@ -164,18 +164,20 @@ static void draw_points_terrain(rnn::WorldGen& gen, scl::file::BMP_Image& image)
 	}
 }
 
-static void draw_basic_terrain(rnn::WorldGen& gen, const Delaunay& dl, scl::file::BMP_Image& image)
+static void draw_basic_terrain(rnn::WorldGen& gen, scl::file::BMP_Image& image)
 {
 	#pragma omp parallel for collapse(2)
 	for (size_t i = 0; i < IMAGE_SIZE; i++) {
 		for (size_t j = 0; j < IMAGE_SIZE; j++) {
 			Point_2 pos = Point_2(static_cast<float>(i) / IMAGE_SIZE, static_cast<float>(j) / IMAGE_SIZE);
 			// Find the closest point in the point cloud
-			auto neighbor = dl.nearest_vertex(pos);
+			auto neighbor = gen._dl.nearest_vertex(pos);
 			size_t idx = gen._points_index_map[neighbor];
 			int color;
-			if (gen._terrain[idx] == 0)
+			if (gen._terrain[idx] == 1)
 				color = GREEN;
+			else if (gen._terrain[idx] == 0)
+				color = YELLOW;
 			else if (gen._terrain[idx] == -1)
 				color = AQUA;
 			else if (gen._terrain[idx] == -2)
@@ -242,26 +244,23 @@ int main()
 		
 		scl::file::BMP_Image image(IMAGE_SIZE, IMAGE_SIZE);
 
-		Delaunay dl_all;
-		dl_all.insert(gen._point_cloud.begin(), gen._point_cloud.end());
-
 		draw_points(gen._point_cloud, image, WHITE);
 		image.save(path + "/points.bmp");
-		draw_delaunay(dl_all, image, WHITE);
+		draw_delaunay(gen._dl, image, WHITE);
 		//draw_used_faces_by_slope(dl_all, gen._slope, path, image, BLUE);
 		draw_slope(gen._slope, image, RED);
 		draw_slope_path(gen._slope_path, image, YELLOW);
 		image.save(path + "/path.bmp");
 		image.clear();
-		draw_delaunay(dl_all, image, WHITE);
+		draw_delaunay(gen._dl, image, WHITE);
 		draw_slope_path(gen._slope_path, image, YELLOW);
 		draw_points_terrain(gen, image);
 		image.save(path + "/terrain_points.bmp");
-		draw_voronoi(dl_all, image, AQUA);
+		draw_voronoi(gen._dl, image, AQUA);
 		image.save(path + "/voronoi.bmp");
-		/*image.clear();
-		draw_basic_terrain(gen, dl_all, image);
-		image.save(path + "/terrain.bmp");*/
+		image.clear();
+		draw_basic_terrain(gen, image);
+		image.save(path + "/terrain.bmp");
 	}
 	else 
 	{
