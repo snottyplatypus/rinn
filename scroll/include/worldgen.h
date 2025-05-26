@@ -18,11 +18,13 @@ namespace scl
 		virtual scl::World generate() = 0;
 
 		std::vector<Point_2> _point_cloud;
+		std::unordered_map<Delaunay::Vertex_handle, size_t> _points_index_map;
 
 	protected:
 		struct data_config
 		{
 			int _seed;
+			int _points_number;
 			float _points_min_dist;
 			int _slope_min;
 			int _slope_max;
@@ -43,7 +45,7 @@ namespace scl
 
 			template <class Archive> void serialize(Archive& ar)
 			{
-				ar(_seed, _boundaries, _points_min_dist, _slope_min, _slope_max, _land_threshold, _land_probability);
+				ar(_seed, _points_number, _boundaries, _points_min_dist, _slope_min, _slope_max, _land_threshold, _land_probability);
 			}
 		} _data_config;
 	};

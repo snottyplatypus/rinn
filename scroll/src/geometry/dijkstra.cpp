@@ -64,18 +64,18 @@ std::vector<Point_2> scl::dijkstra(const Delaunay t, const std::vector<Point_2> 
 
 		//Explore neighbors in the Delaunay triangulation
 		auto vertex_handle = t.nearest_vertex(current_point);
-		auto neighbour = t.incident_vertices(vertex_handle);
-		auto first = neighbour;
+		auto neighbor = t.incident_vertices(vertex_handle);
+		auto first = neighbor;
 
-		if (neighbour == nullptr) //Skip if no neighbors (shouldn't happen in valid triangulation)
+		if (neighbor == nullptr) //Skip if no neighbors (shouldn't happen in valid triangulation)
 			continue;
 
 		do {
 			//Make sure the neighbor isn't at infinity and exists in our graph
-			if (t.is_infinite(neighbour))
+			if (t.is_infinite(neighbor))
 				continue;
 
-			Point_2 neighbor_point = neighbour->point();
+			Point_2 neighbor_point = neighbor->point();
 			auto it = std::find(graph.begin(), graph.end(), neighbor_point);
 
 			if (it != graph.end() && !visited[neighbor_point]) {
@@ -96,7 +96,7 @@ std::vector<Point_2> scl::dijkstra(const Delaunay t, const std::vector<Point_2> 
 					queue.insert({ new_dist, neighbor_point });
 				}
 			}
-		} while (++neighbour != first); //Loop over all incident vertices
+		} while (++neighbor != first); //Loop over all incident vertices
 	}
 
 	//Reconstruct the path from destination back to source

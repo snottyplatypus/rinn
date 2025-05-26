@@ -8,7 +8,7 @@
 #include <fstream>
 #include <cereal/archives/binary.hpp>
 
-static void draw_points(const std::vector<Point_2>& points, const std::string& path, scl::file::BMP_Image& image, int color)
+static void draw_points(const std::vector<Point_2>& points, scl::file::BMP_Image& image, int color)
 {
 	for (const auto& point : points)
 	{
@@ -18,7 +18,7 @@ static void draw_points(const std::vector<Point_2>& points, const std::string& p
 	}
 }
 
-static void draw_delaunay(const Delaunay& dl, const std::string& path, scl::file::BMP_Image& image, int color)
+static void draw_delaunay(const Delaunay& dl, scl::file::BMP_Image& image, int color)
 {
 	for (auto f = dl.faces_begin(); f != dl.faces_end(); f++)
 	{
@@ -32,7 +32,7 @@ static void draw_delaunay(const Delaunay& dl, const std::string& path, scl::file
 	}
 }
 
-static void draw_used_faces_by_slope(const Delaunay& dl_all, const std::vector<Point_2> slope, const std::string& path, scl::file::BMP_Image& image, int color) {
+static void draw_used_faces_by_slope(const Delaunay& dl_all, const std::vector<Point_2> slope, scl::file::BMP_Image& image, int color) {
 	for (int i = 0; i < slope.size() - 1; i++)
 	{
 		auto line_face_circulator = dl_all.line_walk(slope[i], slope[i + 1]);
@@ -54,7 +54,7 @@ static void draw_used_faces_by_slope(const Delaunay& dl_all, const std::vector<P
 	}
 }
 
-static void draw_slope(const std::vector<Point_2> slope, const std::string& path, scl::file::BMP_Image& image, int color)
+static void draw_slope(const std::vector<Point_2> slope, scl::file::BMP_Image& image, int color)
 {
 	for (size_t i = 0; i < slope.size() - 1; i++)
 	{
@@ -67,7 +67,7 @@ static void draw_slope(const std::vector<Point_2> slope, const std::string& path
 	}
 }
 
-static void draw_slope_path(const std::vector<Point_2> slope_path, const std::string& path, scl::file::BMP_Image& image, int color)
+static void draw_slope_path(const std::vector<Point_2> slope_path, scl::file::BMP_Image& image, int color)
 {
 	for (int i = 0; i < slope_path.size() - 1; i++)
 	{
@@ -79,7 +79,7 @@ static void draw_slope_path(const std::vector<Point_2> slope_path, const std::st
 	}
 }
 
-static void draw_voronoi(const Delaunay& dl, const std::string& path, scl::file::BMP_Image& image, int color)
+static void draw_voronoi(const Delaunay& dl, scl::file::BMP_Image& image, int color)
 {
 	//Track which edges we've already drawn to avoid duplicates
 	std::set<std::pair<Point_2, Point_2>> drawn_edges;
@@ -144,18 +144,46 @@ static void draw_voronoi(const Delaunay& dl, const std::string& path, scl::file:
 	}
 }
 
-static void draw_points_terrain(rnn::WorldGen& gen, const std::string& path, scl::file::BMP_Image& image)
+static void draw_points_terrain(rnn::WorldGen& gen, scl::file::BMP_Image& image)
 {
-	for (size_t i = 0; i < gen._point_cloud.size(); i++)
-	{
+	int color = WHITE;
+	for (size_t i = 0; i < gen._point_cloud.size(); i++) {
 		int x = static_cast<int>(gen._point_cloud[i].x() * IMAGE_SIZE);
 		int y = static_cast<int>(gen._point_cloud[i].y() * IMAGE_SIZE);
-		if(gen._terrain[i] == 0)
-			image.put(x, y, BLUE);
-		else if (gen._terrain[i] == 2)
-			image.put(x, y, GREEN);
+		if (gen._terrain[i] == 1)
+			color = GREEN;
+		else if (gen._terrain[i] == 0)
+			color = YELLOW;
+		else if (gen._terrain[i] == -1)
+			color = AQUA;
+		else if (gen._terrain[i] == -2)
+			color = BLUE;
 		else
-			image.put(x, y, WHITE);
+			color = WHITE;
+		image.put(x, y, color);
+	}
+}
+
+static void draw_basic_terrain(rnn::WorldGen& gen, const Delaunay& dl, scl::file::BMP_Image& image)
+{
+	#pragma omp parallel for collapse(2)
+	for (size_t i = 0; i < IMAGE_SIZE; i++) {
+		for (size_t j = 0; j < IMAGE_SIZE; j++) {
+			Point_2 pos = Point_2(static_cast<float>(i) / IMAGE_SIZE, static_cast<float>(j) / IMAGE_SIZE);
+			// Find the closest point in the point cloud
+			auto neighbor = dl.nearest_vertex(pos);
+			size_t idx = gen._points_index_map[neighbor];
+			int color;
+			if (gen._terrain[idx] == 0)
+				color = GREEN;
+			else if (gen._terrain[idx] == -1)
+				color = AQUA;
+			else if (gen._terrain[idx] == -2)
+				color = BLUE;
+			else
+				color = WHITE;
+			image.put(i, j, color);
+		}
 	}
 }
 
@@ -217,19 +245,23 @@ int main()
 		Delaunay dl_all;
 		dl_all.insert(gen._point_cloud.begin(), gen._point_cloud.end());
 
-		draw_points(gen._point_cloud, path, image, WHITE);
+		draw_points(gen._point_cloud, image, WHITE);
 		image.save(path + "/points.bmp");
-		draw_delaunay(dl_all, path, image, WHITE);
+		draw_delaunay(dl_all, image, WHITE);
 		//draw_used_faces_by_slope(dl_all, gen._slope, path, image, BLUE);
-		draw_slope(gen._slope, path, image, RED);
-		draw_slope_path(gen._slope_path, path, image, YELLOW);
+		draw_slope(gen._slope, image, RED);
+		draw_slope_path(gen._slope_path, image, YELLOW);
 		image.save(path + "/path.bmp");
 		image.clear();
-		draw_slope_path(gen._slope_path, path, image, YELLOW);
-		draw_points_terrain(gen, path, image);
-		image.save(path + "/terrain.bmp");
-		draw_voronoi(dl_all, path, image, AQUA);
+		draw_delaunay(dl_all, image, WHITE);
+		draw_slope_path(gen._slope_path, image, YELLOW);
+		draw_points_terrain(gen, image);
+		image.save(path + "/terrain_points.bmp");
+		draw_voronoi(dl_all, image, AQUA);
 		image.save(path + "/voronoi.bmp");
+		/*image.clear();
+		draw_basic_terrain(gen, dl_all, image);
+		image.save(path + "/terrain.bmp");*/
 	}
 	else 
 	{
