@@ -8,9 +8,9 @@
 #include <fstream>
 #include <cereal/archives/binary.hpp>
 
-static void draw_points(const std::vector<Point_2>& points, scl::file::BMP_Image& image, int color)
+static void draw_points(const rnn::WorldGen& gen, scl::file::BMP_Image& image, int color)
 {
-	for (const auto& point : points)
+	for (const auto& point : gen._point_cloud)
 	{
 		int x = static_cast<int>(point.x() * IMAGE_SIZE);
 		int y = static_cast<int>(point.y() * IMAGE_SIZE);
@@ -18,35 +18,35 @@ static void draw_points(const std::vector<Point_2>& points, scl::file::BMP_Image
 	}
 }
 
-static void draw_delaunay(const Delaunay& dl, scl::file::BMP_Image& image, int color)
+static void draw_delaunay(const rnn::WorldGen& gen, scl::file::BMP_Image& image, int color)
 {
-	for (auto f = dl.faces_begin(); f != dl.faces_end(); f++)
+	for (auto f = gen._dl.faces_begin(); f != gen._dl.faces_end(); f++)
 	{
-		int x0 = static_cast<int>(dl.triangle(f)[0].x() * IMAGE_SIZE);
-		int y0 = static_cast<int>(dl.triangle(f)[0].y() * IMAGE_SIZE);
-		int x1 = static_cast<int>(dl.triangle(f)[1].x() * IMAGE_SIZE);
-		int y1 = static_cast<int>(dl.triangle(f)[1].y() * IMAGE_SIZE);
-		int x2 = static_cast<int>(dl.triangle(f)[2].x() * IMAGE_SIZE);
-		int y2 = static_cast<int>(dl.triangle(f)[2].y() * IMAGE_SIZE);
+		int x0 = static_cast<int>(gen._dl.triangle(f)[0].x() * IMAGE_SIZE);
+		int y0 = static_cast<int>(gen._dl.triangle(f)[0].y() * IMAGE_SIZE);
+		int x1 = static_cast<int>(gen._dl.triangle(f)[1].x() * IMAGE_SIZE);
+		int y1 = static_cast<int>(gen._dl.triangle(f)[1].y() * IMAGE_SIZE);
+		int x2 = static_cast<int>(gen._dl.triangle(f)[2].x() * IMAGE_SIZE);
+		int y2 = static_cast<int>(gen._dl.triangle(f)[2].y() * IMAGE_SIZE);
 		image.poly({ { x0, y0 },{ x1, y1 },{ x2, y2 } }, COLOR_DELAUNAY, color);
 	}
 }
 
-static void draw_used_faces_by_slope(const Delaunay& dl_all, const std::vector<Point_2> slope, scl::file::BMP_Image& image, int color) {
-	for (int i = 0; i < slope.size() - 1; i++)
+static void draw_used_faces_by_slope(const rnn::WorldGen& gen, scl::file::BMP_Image& image, int color) {
+	for (int i = 0; i < gen._point_cloud.size() - 1; i++)
 	{
-		auto line_face_circulator = dl_all.line_walk(slope[i], slope[i + 1]);
+		auto line_face_circulator = gen._dl.line_walk(gen._slope[i], gen._slope[i + 1]);
 		auto first_face = line_face_circulator;
 		auto last_face = line_face_circulator;
 		do {
-			if (!dl_all.is_infinite(line_face_circulator)) {
+			if (!gen._dl.is_infinite(line_face_circulator)) {
 				auto f = line_face_circulator.handle();
-				int x0 = static_cast<int>(dl_all.triangle(f)[0].x() * IMAGE_SIZE);
-				int y0 = static_cast<int>(dl_all.triangle(f)[0].y() * IMAGE_SIZE);
-				int x1 = static_cast<int>(dl_all.triangle(f)[1].x() * IMAGE_SIZE);
-				int y1 = static_cast<int>(dl_all.triangle(f)[1].y() * IMAGE_SIZE);
-				int x2 = static_cast<int>(dl_all.triangle(f)[2].x() * IMAGE_SIZE);
-				int y2 = static_cast<int>(dl_all.triangle(f)[2].y() * IMAGE_SIZE);
+				int x0 = static_cast<int>(gen._dl.triangle(f)[0].x() * IMAGE_SIZE);
+				int y0 = static_cast<int>(gen._dl.triangle(f)[0].y() * IMAGE_SIZE);
+				int x1 = static_cast<int>(gen._dl.triangle(f)[1].x() * IMAGE_SIZE);
+				int y1 = static_cast<int>(gen._dl.triangle(f)[1].y() * IMAGE_SIZE);
+				int x2 = static_cast<int>(gen._dl.triangle(f)[2].x() * IMAGE_SIZE);
+				int y2 = static_cast<int>(gen._dl.triangle(f)[2].y() * IMAGE_SIZE);
 				image.poly({ { x0, y0 },{ x1, y1 },{ x2, y2 } }, color);
 				last_face = line_face_circulator;
 			}
@@ -54,40 +54,40 @@ static void draw_used_faces_by_slope(const Delaunay& dl_all, const std::vector<P
 	}
 }
 
-static void draw_slope(const std::vector<Point_2> slope, scl::file::BMP_Image& image, int color)
+static void draw_slope(const rnn::WorldGen& gen, scl::file::BMP_Image& image, int color)
 {
-	for (size_t i = 0; i < slope.size() - 1; i++)
+	for (size_t i = 0; i < gen._slope.size() - 1; i++)
 	{
-		int x0 = static_cast<int>(slope[i].x() * IMAGE_SIZE);
-		int y0 = static_cast<int>(slope[i].y() * IMAGE_SIZE);
-		int x1 = static_cast<int>(slope[i + 1].x() * IMAGE_SIZE);
-		int y1 = static_cast<int>(slope[i + 1].y() * IMAGE_SIZE);
+		int x0 = static_cast<int>(gen._slope[i].x() * IMAGE_SIZE);
+		int y0 = static_cast<int>(gen._slope[i].y() * IMAGE_SIZE);
+		int x1 = static_cast<int>(gen._slope[i + 1].x() * IMAGE_SIZE);
+		int y1 = static_cast<int>(gen._slope[i + 1].y() * IMAGE_SIZE);
 		image.line(x0, y0, x1, y1, color);
 
 	}
 }
 
-static void draw_slope_path(const std::vector<Point_2> slope_path, scl::file::BMP_Image& image, int color)
+static void draw_slope_path(const rnn::WorldGen& gen, scl::file::BMP_Image& image, int color)
 {
-	for (int i = 0; i < slope_path.size() - 1; i++)
+	for (int i = 0; i < gen._slope_path.size() - 1; i++)
 	{
-		int x0 = static_cast<int>(slope_path[i].x() * IMAGE_SIZE);
-		int y0 = static_cast<int>(slope_path[i].y() * IMAGE_SIZE);
-		int x1 = static_cast<int>(slope_path[i + 1].x() * IMAGE_SIZE);
-		int y1 = static_cast<int>(slope_path[i + 1].y() * IMAGE_SIZE);
+		int x0 = static_cast<int>(gen._slope_path[i].x() * IMAGE_SIZE);
+		int y0 = static_cast<int>(gen._slope_path[i].y() * IMAGE_SIZE);
+		int x1 = static_cast<int>(gen._slope_path[i + 1].x() * IMAGE_SIZE);
+		int y1 = static_cast<int>(gen._slope_path[i + 1].y() * IMAGE_SIZE);
 		image.line(x0, y0, x1, y1, color);
 	}
 }
 
-static void draw_voronoi(const Delaunay& dl, scl::file::BMP_Image& image, int color)
+static void draw_voronoi(const rnn::WorldGen& gen, scl::file::BMP_Image& image, int color)
 {
 	//Track which edges we've already drawn to avoid duplicates
 	std::set<std::pair<Point_2, Point_2>> drawn_edges;
 
 	//For each face in the Delaunay triangulation
-	for (auto f = dl.faces_begin(); f != dl.faces_end(); ++f) {
+	for (auto f = gen._dl.faces_begin(); f != gen._dl.faces_end(); ++f) {
 		// Skip infinite faces
-		if (dl.is_infinite(f))
+		if (gen._dl.is_infinite(f))
 			continue;
 
 		//Calculate circumcenter manually (Voronoi vertex)
@@ -105,7 +105,7 @@ static void draw_voronoi(const Delaunay& dl, scl::file::BMP_Image& image, int co
 		for (int i = 0; i < 3; ++i) {
 			auto neighbor = f->neighbor(i);
 			//Skip edges to infinite faces
-			if (dl.is_infinite(neighbor))
+			if (gen._dl.is_infinite(neighbor))
 				continue;
 
 			//Calculate center of neighbor triangle (approximation)
@@ -244,19 +244,19 @@ int main()
 		
 		scl::file::BMP_Image image(IMAGE_SIZE, IMAGE_SIZE);
 
-		draw_points(gen._point_cloud, image, WHITE);
+		draw_points(gen, image, WHITE);
 		image.save(path + "/points.bmp");
-		draw_delaunay(gen._dl, image, WHITE);
+		draw_delaunay(gen, image, WHITE);
 		//draw_used_faces_by_slope(dl_all, gen._slope, path, image, BLUE);
-		draw_slope(gen._slope, image, RED);
-		draw_slope_path(gen._slope_path, image, YELLOW);
+		draw_slope(gen, image, RED);
+		draw_slope_path(gen, image, YELLOW);
 		image.save(path + "/path.bmp");
 		image.clear();
-		draw_delaunay(gen._dl, image, WHITE);
-		draw_slope_path(gen._slope_path, image, YELLOW);
+		draw_delaunay(gen, image, WHITE);
+		draw_slope_path(gen, image, YELLOW);
 		draw_points_terrain(gen, image);
 		image.save(path + "/terrain_points.bmp");
-		draw_voronoi(gen._dl, image, AQUA);
+		draw_voronoi(gen, image, AQUA);
 		image.save(path + "/voronoi.bmp");
 		image.clear();
 		draw_basic_terrain(gen, image);
