@@ -53,6 +53,7 @@ namespace scl
 			void line(int x1, int y1, int x2, int y2, int rgb);
 			void poly(std::vector<std::pair<int, int>> points, int rgb_edges);
 			void poly(std::vector<std::pair<int, int>> points, int rgb_edges, int rgb_vertices);
+			void poly_fill(std::vector<std::pair<int, int>> points, int rgb_fill);
 
 		private:
 			std::vector<unsigned char> _buffer;

@@ -3,6 +3,8 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <vector>
+#include <limits>
 
 scl::file::BMP_Image::BMP_Image(int width, int height) : _width(width), _height(height)
 {
@@ -96,6 +98,63 @@ void scl::file::BMP_Image::poly(std::vector<std::pair<int, int>> points, int rgb
 
 	for (auto p : points)
 		put(p.first, p.second, rgb_vertices);
+}
+
+void scl::file::BMP_Image::poly_fill(std::vector<std::pair<int, int>> points, int rgb_fill)
+{
+	//Find bounding box
+	int min_y = std::numeric_limits<int>::max();
+	int max_y = std::numeric_limits<int>::min();
+
+	for (const auto& point : points) {
+		min_y = std::min(min_y, point.second);
+		max_y = std::max(max_y, point.second);
+	}
+
+	//Clamp to image bounds
+	min_y = std::max(0, min_y);
+	max_y = std::min(_height - 1, max_y);
+
+	//For each scanline
+	for (int y = min_y; y <= max_y; y++) {
+		std::vector<int> intersections;
+
+		//Find intersections of scanline with polygon edges
+		size_t n = points.size();
+		for (size_t i = 0; i < n; i++) {
+			size_t j = (i + 1) % n;
+
+			int y1 = points[i].second;
+			int y2 = points[j].second;
+			int x1 = points[i].first;
+			int x2 = points[j].first;
+
+			//Skip horizontal edges
+			if (y1 == y2) continue;
+
+			//Check if scanline intersects this edge
+			if ((y >= y1 && y < y2) || (y >= y2 && y < y1)) {
+				//Calculate intersection x-coordinate
+				double x_intersect = x1 + (double)(y - y1) * (x2 - x1) / (y2 - y1);
+				intersections.push_back((int)x_intersect);
+			}
+		}
+
+		//Sort intersections
+		std::sort(intersections.begin(), intersections.end());
+
+		//Fill between pairs of intersections
+		for (size_t i = 0; i < intersections.size(); i += 2) {
+			if (i + 1 < intersections.size()) {
+				int x_start = std::max(0, intersections[i]);
+				int x_end = std::min(_width - 1, intersections[i + 1]);
+
+				for (int x = x_start; x <= x_end; x++) {
+					put(x, y, rgb_fill);
+				}
+			}
+		}
+	}
 }
 
 std::vector<unsigned char> scl::file::loadBMP(const char* fileName, int* outWidth, int* outHeight)

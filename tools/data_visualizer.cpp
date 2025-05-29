@@ -116,22 +116,22 @@ static void draw_voronoi(const rnn::WorldGen& gen, scl::file::BMP_Image& image, 
 	}
 }
 
+static int get_color_by_terrain(int terrain_type) {
+	switch (terrain_type) {
+	case 1: return GREEN;   //Land
+	case 0: return YELLOW;  //Sand
+	case -1: return AQUA;   //Shore
+	case -2: return BLUE;   //Sea
+	default: return WHITE;  //Void/Unknown
+	}
+}
+
 static void draw_points_terrain(rnn::WorldGen& gen, scl::file::BMP_Image& image)
 {
-	int color = WHITE;
 	for (size_t i = 0; i < gen._point_cloud.size(); i++) {
 		int x = static_cast<int>(gen._point_cloud[i].x() * IMAGE_SIZE);
 		int y = static_cast<int>(gen._point_cloud[i].y() * IMAGE_SIZE);
-		if (gen._terrain[i] == 1)
-			color = GREEN;
-		else if (gen._terrain[i] == 0)
-			color = YELLOW;
-		else if (gen._terrain[i] == -1)
-			color = AQUA;
-		else if (gen._terrain[i] == -2)
-			color = BLUE;
-		else
-			color = WHITE;
+		int color = get_color_by_terrain(gen._terrain[i]);
 		image.put(x, y, color);
 	}
 }
@@ -145,18 +145,59 @@ static void draw_basic_terrain(rnn::WorldGen& gen, scl::file::BMP_Image& image)
 			// Find the closest point in the point cloud
 			auto neighbor = gen._dl.nearest_vertex(pos);
 			size_t idx = gen._points_index_map[neighbor];
-			int color;
-			if (gen._terrain[idx] == 1)
-				color = GREEN;
-			else if (gen._terrain[idx] == 0)
-				color = YELLOW;
-			else if (gen._terrain[idx] == -1)
-				color = AQUA;
-			else if (gen._terrain[idx] == -2)
-				color = BLUE;
-			else
-				color = WHITE;
+			int color = get_color_by_terrain(gen._terrain[idx]);
 			image.put(i, j, color);
+		}
+	}
+}
+
+static void draw_terrain(const rnn::WorldGen& gen, scl::file::BMP_Image& image) {
+	for (auto vertex = gen._dl.finite_vertices_begin(); vertex != gen._dl.finite_vertices_end(); ++vertex) {
+		std::vector<Point_2> voronoi_vertices;
+
+		//Get all faces (triangles) incident to this vertex
+		auto face_circulator = gen._dl.incident_faces(vertex);
+		auto start = face_circulator;
+
+		if (face_circulator != nullptr) {
+			do {
+				//Skip infinite faces
+				if (!gen._dl.is_infinite(face_circulator)) {
+					//Calculate circumcenter of the triangle (this is a Voronoi vertex)
+					Point_2 circumcenter = CGAL::circumcenter(
+						face_circulator->vertex(0)->point(),
+						face_circulator->vertex(1)->point(),
+						face_circulator->vertex(2)->point()
+					);
+					voronoi_vertices.push_back(circumcenter);
+				}
+				++face_circulator;
+			} while (face_circulator != start);
+		}
+
+		//Get the terrain value for this vertex and determine the fill color
+		auto it = gen._points_index_map.find(vertex);
+		int terrain_value = gen._terrain[it->second];
+		int fill_color = get_color_by_terrain(terrain_value);
+
+		//Convert to screen coordinates and fill the polygon
+		if (voronoi_vertices.size() >= 3) {
+			std::vector<std::pair<int, int>> screen_vertices;
+
+			for (const auto& v : voronoi_vertices) {
+				int x = static_cast<int>(v.x() * IMAGE_SIZE);
+				int y = static_cast<int>(v.y() * IMAGE_SIZE);
+
+				//Clamp to image bounds
+				x = std::max(0, std::min(IMAGE_SIZE - 1, x));
+				y = std::max(0, std::min(IMAGE_SIZE - 1, y));
+
+				screen_vertices.push_back({ x, y });
+			}
+
+			if (screen_vertices.size() >= 3) {
+				image.poly_fill(screen_vertices, fill_color);
+			}
 		}
 	}
 }
@@ -217,24 +258,21 @@ int main()
 		scl::file::BMP_Image image(IMAGE_SIZE, IMAGE_SIZE);
 
 		draw_points(gen, image, WHITE);
-		image.save(path + "/points.bmp");
 		draw_delaunay(gen, image, WHITE);
 		//draw_used_faces_by_slope(dl_all, gen._slope, path, image, BLUE);
 		draw_slope(gen, image, RED);
 		draw_slope_path(gen, image, YELLOW);
 		image.save(path + "/path.bmp");
-
 		image.clear();
+
 		draw_delaunay(gen, image, WHITE);
 		draw_slope_path(gen, image, YELLOW);
 		draw_points_terrain(gen, image);
 		image.save(path + "/terrain_points.bmp");
 		draw_voronoi(gen, image, AQUA);
 		image.save(path + "/voronoi.bmp");
-
-		image.clear();
-		draw_basic_terrain(gen, image);
-		image.save(path + "/terrain.bmp");
+		draw_terrain(gen, image);
+		image.save(path + "/voronoi_filled.bmp");
 	}
 	else 
 	{
