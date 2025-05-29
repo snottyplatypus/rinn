@@ -47,12 +47,15 @@ scl::World rnn::WorldGen::generate()
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 	std::cout << "Faces generated : " << _dl.number_of_faces() << std::endl;
 
+	std::cout << "Indexing points.. ";
+	timer = clock();
 	//Create points index map for future usage
 	for (auto& vh : _dl.finite_vertex_handles()) {
 		auto it = std::find(_point_cloud.begin(), _point_cloud.end(), vh->point());
 		size_t idx = std::distance(_point_cloud.begin(), it);
 		_points_index_map[vh] = idx;
 	}
+	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 
 	//Generate slope from one edge to another
 	std::cout << "Generating slope.. ";
@@ -210,14 +213,13 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& 
 				//If within threshold distance, mark as land with a fixed probability
 				auto sq_dist = CGAL::squared_distance(_point_cloud[point_idx], _point_cloud[i]);
 				bool land_pb = PRNG.randomFloat(0.0f, 1.0f) < _data_config._land_probability;
-				if (sq_dist < (_data_config._points_min_dist * _data_config._points_min_dist * _data_config._land_threshold) && land_pb) {
+				if (sq_dist < (_data_config._points_min_dist * _data_config._points_min_dist * CGAL::square(_data_config._land_threshold)) && land_pb) {
 					point_marks[point_idx] = 1; break;
 				}
 			}
 
 		} while (++neighbor_vertices != first);
 	}
-
 	return point_marks;
 }
 
