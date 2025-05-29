@@ -8,6 +8,7 @@
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel					K;
 typedef K::Point_2															Point_2;
+typedef CGAL::Delaunay_triangulation_2<K>									Delaunay;
 
 namespace scl
 {

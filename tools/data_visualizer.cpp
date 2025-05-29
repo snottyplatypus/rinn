@@ -6,6 +6,7 @@
 #include <chrono>
 #include <thread>
 #include <fstream>
+#include <boost/variant/get.hpp>
 #include <cereal/archives/binary.hpp>
 
 static void draw_points(const rnn::WorldGen& gen, scl::file::BMP_Image& image, int color)
@@ -79,66 +80,37 @@ static void draw_slope_path(const rnn::WorldGen& gen, scl::file::BMP_Image& imag
 	}
 }
 
-static void draw_voronoi(const rnn::WorldGen& gen, scl::file::BMP_Image& image, int color)
-{
-	//Track which edges we've already drawn to avoid duplicates
-	std::set<std::pair<Point_2, Point_2>> drawn_edges;
+static void draw_voronoi(const rnn::WorldGen& gen, scl::file::BMP_Image& image, int color) {
+	for (auto edge = gen._dl.finite_edges_begin(); edge != gen._dl.finite_edges_end(); ++edge) {
+		auto face1 = edge->first;
+		int edge_index = edge->second;
+		auto face2 = face1->neighbor(edge_index);
 
-	//For each face in the Delaunay triangulation
-	for (auto f = gen._dl.faces_begin(); f != gen._dl.faces_end(); ++f) {
-		// Skip infinite faces
-		if (gen._dl.is_infinite(f))
-			continue;
+		Point_2 voronoi_vertex1, voronoi_vertex2;
+		bool has_vertex1 = false, has_vertex2 = false;
 
-		//Calculate circumcenter manually (Voronoi vertex)
-		const Point_2& p1 = f->vertex(0)->point();
-		const Point_2& p2 = f->vertex(1)->point();
-		const Point_2& p3 = f->vertex(2)->point();
-		//Simple arithmetic mean as an approximation for display purposes
-		double center_x_d = (p1.x() + p2.x() + p3.x()) / 3.0;
-		double center_y_d = (p1.y() + p2.y() + p3.y()) / 3.0;
-		//Convert to image coordinates
-		int center_x = static_cast<int>(center_x_d * IMAGE_SIZE);
-		int center_y = static_cast<int>(center_y_d * IMAGE_SIZE);
+		//Get first Voronoi vertex (circumcenter of face1)
+		if (!gen._dl.is_infinite(face1)) {
+			voronoi_vertex1 = CGAL::circumcenter(face1->vertex(0)->point(), face1->vertex(1)->point(), face1->vertex(2)->point());
+			has_vertex1 = true;
+		}
 
-		//Draw Voronoi edges to adjacent faces (which are connected by shared edges)
-		for (int i = 0; i < 3; ++i) {
-			auto neighbor = f->neighbor(i);
-			//Skip edges to infinite faces
-			if (gen._dl.is_infinite(neighbor))
-				continue;
+		//Get second Voronoi vertex (circumcenter of face2)
+		if (!gen._dl.is_infinite(face2)) {
+			voronoi_vertex2 = CGAL::circumcenter(face2->vertex(0)->point(), face2->vertex(1)->point(), face2->vertex(2)->point());
+			has_vertex2 = true;
+		}
 
-			//Calculate center of neighbor triangle (approximation)
-			const Point_2& n1 = neighbor->vertex(0)->point();
-			const Point_2& n2 = neighbor->vertex(1)->point();
-			const Point_2& n3 = neighbor->vertex(2)->point();
-			double neighbor_x_d = (n1.x() + n2.x() + n3.x()) / 3.0;
-			double neighbor_y_d = (n1.y() + n2.y() + n3.y()) / 3.0;
-			//Convert to image coordinates
-			int neighbor_x = static_cast<int>(neighbor_x_d * IMAGE_SIZE);
-			int neighbor_y = static_cast<int>(neighbor_y_d * IMAGE_SIZE);
-			//Create a unique representation of this edge
-			Point_2 p_center(center_x_d, center_y_d);
-			Point_2 p_neighbor(neighbor_x_d, neighbor_y_d);
+		if (has_vertex1 && has_vertex2) {
+			//Finite Voronoi edge
+			int x1 = static_cast<int>(voronoi_vertex1.x() * IMAGE_SIZE);
+			int y1 = static_cast<int>(voronoi_vertex1.y() * IMAGE_SIZE);
+			int x2 = static_cast<int>(voronoi_vertex2.x() * IMAGE_SIZE);
+			int y2 = static_cast<int>(voronoi_vertex2.y() * IMAGE_SIZE);
 
-			//Ensure consistent ordering for the pair to avoid duplicates
-			std::pair<Point_2, Point_2> edge;
-			if (p_center < p_neighbor)
-				edge = std::make_pair(p_center, p_neighbor);
-			else
-				edge = std::make_pair(p_neighbor, p_center);
-
-			//Only draw if we haven't drawn this edge before
-			if (drawn_edges.find(edge) == drawn_edges.end()) {
-				//Check if points are within bounds of the image
-				if (center_x >= 0 && center_x < IMAGE_SIZE &&
-					center_y >= 0 && center_y < IMAGE_SIZE &&
-					neighbor_x >= 0 && neighbor_x < IMAGE_SIZE &&
-					neighbor_y >= 0 && neighbor_y < IMAGE_SIZE)
-				{
-					image.line(center_x, center_y, neighbor_x, neighbor_y, color);
-					drawn_edges.insert(edge);
-				}
+			if (x1 >= 0 && x1 < IMAGE_SIZE && y1 >= 0 && y1 < IMAGE_SIZE &&
+				x2 >= 0 && x2 < IMAGE_SIZE && y2 >= 0 && y2 < IMAGE_SIZE) {
+				image.line(x1, y1, x2, y2, color);
 			}
 		}
 	}
@@ -251,6 +223,7 @@ int main()
 		draw_slope(gen, image, RED);
 		draw_slope_path(gen, image, YELLOW);
 		image.save(path + "/path.bmp");
+
 		image.clear();
 		draw_delaunay(gen, image, WHITE);
 		draw_slope_path(gen, image, YELLOW);
@@ -258,6 +231,7 @@ int main()
 		image.save(path + "/terrain_points.bmp");
 		draw_voronoi(gen, image, AQUA);
 		image.save(path + "/voronoi.bmp");
+
 		image.clear();
 		draw_basic_terrain(gen, image);
 		image.save(path + "/terrain.bmp");
