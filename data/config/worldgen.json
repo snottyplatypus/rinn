@@ -1,7 +1,6 @@
 {
   "worldgen": {
     "seed": -1,
-    "points_number" : 10000,
     "boundaries": {
       "x_min": 0.35,
       "x_max": 0.35,

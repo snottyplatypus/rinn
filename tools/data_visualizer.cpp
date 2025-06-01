@@ -6,7 +6,6 @@
 #include <chrono>
 #include <thread>
 #include <fstream>
-#include <boost/variant/get.hpp>
 #include <cereal/archives/binary.hpp>
 
 static void draw_points(const rnn::WorldGen& gen, scl::file::BMP_Image& image, int color)
@@ -117,12 +116,29 @@ static void draw_voronoi(const rnn::WorldGen& gen, scl::file::BMP_Image& image, 
 }
 
 static int get_color_by_terrain(int terrain_type) {
-	switch (terrain_type) {
-	case 1: return GREEN;   //Land
-	case 0: return YELLOW;  //Sand
-	case -1: return AQUA;   //Shore
-	case -2: return BLUE;   //Sea
-	default: return WHITE;  //Void/Unknown
+	const int SEA_LEVELS = 10; //Number of levels for sea gradient
+	const int LAND_LEVELS = 10; //Number of levels for land gradient
+	//Sea gradient (negative numbers)
+	if (terrain_type < 0) {
+		//Map terrain values from -inf to 0 to a gradient from aqua to very dark blue
+		int level = std::min(SEA_LEVELS - 1, static_cast<int>((-terrain_type * SEA_LEVELS) / SEA_LEVELS));
+		float normalized = static_cast<float>(level) / (SEA_LEVELS - 1);
+		int r = static_cast<int>(0 * normalized + 0 * (1 - normalized));  // 0 to 0
+		int g = static_cast<int>(0 * normalized + 192 * (1 - normalized));  // 0 to 255
+		int b = static_cast<int>(128 * normalized + 255 * (1 - normalized));  // 128 to 255
+		return (r << 16) | (g << 8) | b;
+	}
+	else if (terrain_type == 0)
+		return YELLOW; //Color for coast (0)
+	//Land gradient (positive numbers)
+	else {
+		//Map terrain values from 0 to inf to a gradient from green to dark green
+		int level = std::min(LAND_LEVELS - 1, static_cast<int>((terrain_type * LAND_LEVELS) / LAND_LEVELS));
+		float normalized = static_cast<float>(level) / (LAND_LEVELS - 1);
+		int r = static_cast<int>(0 * (1 - normalized));  //0 to 0
+		int g = static_cast<int>(255 * (1 - normalized) + 128 * normalized);  //255 to 128
+		int b = static_cast<int>(0 * (1 - normalized));  //0 to 0
+		return (r << 16) | (g << 8) | b;
 	}
 }
 
@@ -142,7 +158,7 @@ static void draw_basic_terrain(rnn::WorldGen& gen, scl::file::BMP_Image& image)
 	for (size_t i = 0; i < IMAGE_SIZE; i++) {
 		for (size_t j = 0; j < IMAGE_SIZE; j++) {
 			Point_2 pos = Point_2(static_cast<float>(i) / IMAGE_SIZE, static_cast<float>(j) / IMAGE_SIZE);
-			// Find the closest point in the point cloud
+			//Find the closest point in the point cloud
 			auto neighbor = gen._dl.nearest_vertex(pos);
 			size_t idx = gen._points_index_map[neighbor];
 			int color = get_color_by_terrain(gen._terrain[idx]);
@@ -261,18 +277,21 @@ int main()
 		draw_delaunay(gen, image, WHITE);
 		//draw_used_faces_by_slope(dl_all, gen._slope, path, image, BLUE);
 		draw_slope(gen, image, RED);
-		draw_slope_path(gen, image, YELLOW);
+		draw_slope_path(gen, image, PURPLE);
 		image.save(path + "/path.bmp");
 		image.clear();
 
 		draw_delaunay(gen, image, WHITE);
-		draw_slope_path(gen, image, YELLOW);
+		draw_slope_path(gen, image, PURPLE);
 		draw_points_terrain(gen, image);
 		image.save(path + "/terrain_points.bmp");
 		draw_voronoi(gen, image, AQUA);
 		image.save(path + "/voronoi.bmp");
 		draw_terrain(gen, image);
-		image.save(path + "/voronoi_filled.bmp");
+		image.save(path + "/terrain.bmp");
+		draw_delaunay(gen, image, WHITE);
+		draw_slope_path(gen, image, PURPLE);
+		image.save(path + "/terrain_delaunay.bmp");
 	}
 	else 
 	{

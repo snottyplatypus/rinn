@@ -5,6 +5,9 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/types/utility.hpp>
 
+static const int LAND = 1;
+static const int SEA = -2;
+
 namespace rnn
 {
 	class WorldGen : public scl::WorldGen

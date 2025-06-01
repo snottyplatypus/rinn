@@ -5,6 +5,7 @@
 #include <set>
 #include <iostream>
 #include <fstream>
+#include <queue>
 
 rnn::WorldGen::WorldGen()
 {
@@ -36,7 +37,7 @@ scl::World rnn::WorldGen::generate()
 	std::clock_t timer = clock();
 	//Generate points using Poisson Generation
 	if(_point_cloud.size() == 0)
-		_point_cloud = scl::PoissonGenerator::generatePoissonPoints(_data_config._points_number, PRNG, 10, false, _data_config._points_min_dist);
+		_point_cloud = scl::PoissonGenerator::generatePoissonPoints(std::numeric_limits<int>::max(), PRNG, 10, false, _data_config._points_min_dist);
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 	std::cout << "Points generated : " << _point_cloud.size() << std::endl;
 
@@ -167,10 +168,10 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& 
 	//Create a set of path points for faster lookup
 	std::set<Point_2> path_set(_slope_path.begin(), _slope_path.end());
 
-	//Mark all path points as 1
+	//Mark all path points as land
 	for (size_t i = 0; i < _point_cloud.size(); ++i) {
 		if (path_set.find(_point_cloud[i]) != path_set.end())
-			point_marks[i] = 1; //Mark path points as land
+			point_marks[i] = LAND; //Mark path points as land
 	}
 
 	//Create a queue of point indices to process (excluding path points)
@@ -179,7 +180,7 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& 
 
 	//Fill queue with indices of all points except path points
 	for (size_t i = 0; i < _point_cloud.size(); ++i) {
-		if (path_set.find(_point_cloud[i]) != path_set.end()) // Skip points that are already in the path
+		if (path_set.find(_point_cloud[i]) != path_set.end()) //Skip points that are already in the path
 			continue;
 		queue.push_back(i);
 	}
@@ -192,7 +193,7 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& 
 		std::swap(queue[random_index], queue.back());
 		queue.pop_back();
 		auto vertex_handle = _dl.nearest_vertex(_point_cloud[point_idx]);
-		// Check all neighbors
+		//Check all neighbors
 		auto neighbor_vertices = _dl.incident_vertices(vertex_handle);
 		auto first = neighbor_vertices;
 		do {
@@ -201,10 +202,10 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& 
 
 			size_t neighbor_idx = _points_index_map[neighbor_vertices];
 			//If any neighbor is in the path or already land, mark current point as land
-			if (path_set.find(neighbor_vertices->point()) != path_set.end() || point_marks[neighbor_idx] == 1) {
-				point_marks[point_idx] = 1; break;
+			if (path_set.find(neighbor_vertices->point()) != path_set.end() || point_marks[neighbor_idx] == LAND) {
+				point_marks[point_idx] = LAND; break;
 			} else //Mark as sea 
-				point_marks[point_idx] = -2;
+				point_marks[point_idx] = SEA;
 			for (size_t i = 0; i < _point_cloud.size(); ++i) {
 				//Skip if not land or if it's the current point
 				if (point_marks[i] != 1 || i == point_idx)
@@ -213,8 +214,8 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& 
 				//If within threshold distance, mark as land with a fixed probability
 				auto sq_dist = CGAL::squared_distance(_point_cloud[point_idx], _point_cloud[i]);
 				bool land_pb = PRNG.randomFloat(0.0f, 1.0f) < _data_config._land_probability;
-				if (sq_dist < (_data_config._points_min_dist * _data_config._points_min_dist * CGAL::square(_data_config._land_threshold)) && land_pb) {
-					point_marks[point_idx] = 1; break;
+				if (sq_dist < (CGAL::square(_data_config._points_min_dist) * CGAL::square(_data_config._land_threshold)) && land_pb) {
+					point_marks[point_idx] = LAND; break;
 				}
 			}
 
@@ -225,25 +226,86 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& 
 
 void rnn::WorldGen::create_elevation()
 {
+	//Find all coast points
+	std::vector<bool> is_coast(_point_cloud.size(), false);
+	
 	for (size_t i = 0; i < _terrain.size(); i++) {
-		auto vertex_handle = _dl.nearest_vertex(_point_cloud[i]);
-		// Check all neighbors
-		auto neighbor = _dl.incident_vertices(vertex_handle);
-		auto first = neighbor;
-		do {
-			if (_dl.is_infinite(neighbor))
-				continue;
+		if (_terrain[i] >= 0) { //Only check land points
+			auto vertex_handle = _dl.nearest_vertex(_point_cloud[i]);
+			auto neighbor = _dl.incident_vertices(vertex_handle);
+			auto first = neighbor;
+			do {
+				if (_dl.is_infinite(neighbor))
+					continue;
 
-			size_t neighbor_idx = _points_index_map[neighbor];
-			if (_terrain[i] < 0 && _terrain[neighbor_idx] >= 0) {
-				//If current point is sea and neighbor is terrain, mark as shore and neighbor as beach
-				_terrain[i] = -1;
-				_terrain[neighbor_idx] = 0; break;
-			} else if (_terrain[i] >= 0 && _terrain[neighbor_idx] < 0) {
-				//If current point is land and neighbor is shore, mark as beach
-				_terrain[i] = 0;
-				_terrain[neighbor_idx] = -1; break;
+				size_t neighbor_idx = _points_index_map[neighbor];
+				if (_terrain[neighbor_idx] < 0) { //If neighbor is sea
+					is_coast[i] = true;
+					break;
+				}
+			} while (++neighbor != first);
+		}
+	}
+
+	std::vector<int> hop_distances(_point_cloud.size(), std::numeric_limits<int>::max());	
+	std::queue<size_t> bfs_queue;
+	
+	//Initialize queue with coast points and their neighbors
+	for (size_t i = 0; i < _point_cloud.size(); i++) {
+		if (is_coast[i]) {
+			hop_distances[i] = 0;
+			bfs_queue.push(i);
+			
+			//Add sea neighbors of coast points
+			auto vertex_handle = _dl.nearest_vertex(_point_cloud[i]);
+			auto neighbors = _dl.incident_vertices(vertex_handle);
+			auto first = neighbors;
+			do {
+				if (_dl.is_infinite(neighbors))
+					continue;
+
+				size_t neighbor_idx = _points_index_map[neighbors];
+				if (_terrain[neighbor_idx] < 0) { //If neighbor is sea
+					hop_distances[neighbor_idx] = 1;
+					bfs_queue.push(neighbor_idx);
+				}
+			} while (++neighbors != first);
+		}
+	}
+	
+	//BFS to compute hop distances for all points
+	while (!bfs_queue.empty()) {
+		size_t current_idx = bfs_queue.front();
+		bfs_queue.pop();
+		
+		auto vertex_handle = _dl.nearest_vertex(_point_cloud[current_idx]);
+		auto neighbors = _dl.incident_vertices(vertex_handle);
+		auto first = neighbors;
+		
+		do {
+			if (_dl.is_infinite(neighbors))
+				continue;
+				
+			size_t neighbor_idx = _points_index_map[neighbors];
+			
+			//Only process points of the same type (land or sea)
+			if ((_terrain[current_idx] >= 0 && _terrain[neighbor_idx] >= 0) || 
+				(_terrain[current_idx] < 0 && _terrain[neighbor_idx] < 0)) {
+				
+				//If we found a shorter path to this neighbor
+				if (hop_distances[neighbor_idx] > hop_distances[current_idx] + 1) {
+					hop_distances[neighbor_idx] = hop_distances[current_idx] + 1;
+					bfs_queue.push(neighbor_idx);
+				}
 			}
-		} while (++neighbor != first);
+		} while (++neighbors != first);
+	}
+	
+	//Set elevations based on hop distances
+	for (size_t i = 0; i < _point_cloud.size(); i++) {
+		if (_terrain[i] >= 0) //Land points get elevation based on hop distance from coast
+			_terrain[i] = hop_distances[i];
+		else //Sea points get negative elevation based on hop distance from coast
+			_terrain[i] = -hop_distances[i];
 	}
 }
