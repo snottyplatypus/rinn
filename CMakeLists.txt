@@ -47,17 +47,14 @@ endif()
 add_subdirectory ("scroll")
 
 # Link libraries.
-find_package(SDL2 CONFIG REQUIRED)
-find_package(libtcod CONFIG REQUIRED)
+find_package(raylib CONFIG REQUIRED)
 find_package(CGAL CONFIG REQUIRED)
 find_package(cereal CONFIG REQUIRED)
 
 target_link_libraries(
     ${PROJECT_NAME}
     PRIVATE
-        SDL2::SDL2
-        SDL2::SDL2main
-        libtcod::libtcod
+        raylib
 		CGAL::CGAL
 		cereal::cereal
         scroll
@@ -65,9 +62,7 @@ target_link_libraries(
 target_link_libraries(
     data_visualizer
     PRIVATE
-        SDL2::SDL2
-        SDL2::SDL2main
-        libtcod::libtcod
+        raylib
 		CGAL::CGAL
 		cereal::cereal
         scroll

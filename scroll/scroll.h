@@ -1,7 +1,7 @@
 #ifndef SCROLL_H
 #define SCROLL_H
 
-#include <libtcod.hpp>
+#include <raylib.h>
 #include "include/file/bmp.h"
 #include "include/file/serial.h"
 #include "include/geometry/pos_2d.h"

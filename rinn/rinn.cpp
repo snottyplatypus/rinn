@@ -13,6 +13,7 @@ int main()
 {
 	//Init system and generate a world
 	scl::System::init();
+
 	rnn::WorldGen gen;
 	scl::World world = gen.generate();
 	
@@ -38,11 +39,16 @@ int main()
 	cereal::BinaryOutputArchive archive(file);
 	archive(gen);
 	file.close();
-
 	std::cout << "done at " << path << std::endl;
 
-	TCODConsole::root->flush();
-	TCODConsole::root->waitForKeypress(true);
+	while (!WindowShouldClose())
+	{
+		BeginDrawing();
+		ClearBackground(BLACK);
+		scl::system->renderer()->drawFont("Rinn", scl::system->renderer()->_data_window._width / 2 - 32, scl::system->renderer()->_data_window._height / 2, WHITE);
+
+		EndDrawing();
+	}
 
 	return 0;
 }

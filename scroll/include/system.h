@@ -2,8 +2,8 @@
 #define SYSTEM_H
 
 #include "renderer.h"
+#include "random.h"
 #include <memory>
-#include <libtcod.hpp>
 
 namespace scl
 {
@@ -14,6 +14,7 @@ namespace scl
 		~Engine();
 
 		void init();
+		std::shared_ptr<Renderer> renderer() const { return _renderer; }
 	private:
 		std::shared_ptr<Renderer> _renderer;
 	};
@@ -25,7 +26,7 @@ namespace scl
 		void init();
 	}
 
-	extern std::unique_ptr<TCODRandom> rand;
+	extern std::unique_ptr<scl::DefaultPRNG> rand;
 }
 
 #endif

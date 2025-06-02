@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <raylib.h>
 #include <cereal/archives/json.hpp>
 
 namespace scl
@@ -14,8 +15,9 @@ namespace scl
 		~Renderer();
 
 		void init();
+		void drawFont(char c, float x, float y, Color color) const;
+		void drawFont(std::string str, float x, float y, Color color) const;
 
-	private:
 		struct data_window
 		{
 			int _width;
@@ -27,6 +29,10 @@ namespace scl
 				ar(_width, _height, _fullscreen);
 			}
 		} _data_window;
+
+	private:
+		Texture2D _font;
+		void load_font(const std::string& path);
 
 		struct data_font
 		{

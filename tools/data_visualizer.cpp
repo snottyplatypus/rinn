@@ -12,8 +12,8 @@ static void draw_points(const rnn::WorldGen& gen, scl::file::BMP_Image& image, i
 {
 	for (const auto& point : gen._point_cloud)
 	{
-		int x = static_cast<int>(point.x() * IMAGE_SIZE);
-		int y = static_cast<int>(point.y() * IMAGE_SIZE);
+		int x = static_cast<int>(point.x() * _IMAGE_SIZE);
+		int y = static_cast<int>(point.y() * _IMAGE_SIZE);
 		image.put(x, y, color);
 	}
 }
@@ -22,13 +22,13 @@ static void draw_delaunay(const rnn::WorldGen& gen, scl::file::BMP_Image& image,
 {
 	for (auto f = gen._dl.faces_begin(); f != gen._dl.faces_end(); f++)
 	{
-		int x0 = static_cast<int>(gen._dl.triangle(f)[0].x() * IMAGE_SIZE);
-		int y0 = static_cast<int>(gen._dl.triangle(f)[0].y() * IMAGE_SIZE);
-		int x1 = static_cast<int>(gen._dl.triangle(f)[1].x() * IMAGE_SIZE);
-		int y1 = static_cast<int>(gen._dl.triangle(f)[1].y() * IMAGE_SIZE);
-		int x2 = static_cast<int>(gen._dl.triangle(f)[2].x() * IMAGE_SIZE);
-		int y2 = static_cast<int>(gen._dl.triangle(f)[2].y() * IMAGE_SIZE);
-		image.poly({ { x0, y0 },{ x1, y1 },{ x2, y2 } }, COLOR_DELAUNAY, color);
+		int x0 = static_cast<int>(gen._dl.triangle(f)[0].x() * _IMAGE_SIZE);
+		int y0 = static_cast<int>(gen._dl.triangle(f)[0].y() * _IMAGE_SIZE);
+		int x1 = static_cast<int>(gen._dl.triangle(f)[1].x() * _IMAGE_SIZE);
+		int y1 = static_cast<int>(gen._dl.triangle(f)[1].y() * _IMAGE_SIZE);
+		int x2 = static_cast<int>(gen._dl.triangle(f)[2].x() * _IMAGE_SIZE);
+		int y2 = static_cast<int>(gen._dl.triangle(f)[2].y() * _IMAGE_SIZE);
+		image.poly({ { x0, y0 },{ x1, y1 },{ x2, y2 } }, _COLOR_DELAUNAY, color);
 	}
 }
 
@@ -41,12 +41,12 @@ static void draw_used_faces_by_slope(const rnn::WorldGen& gen, scl::file::BMP_Im
 		do {
 			if (!gen._dl.is_infinite(line_face_circulator)) {
 				auto f = line_face_circulator.handle();
-				int x0 = static_cast<int>(gen._dl.triangle(f)[0].x() * IMAGE_SIZE);
-				int y0 = static_cast<int>(gen._dl.triangle(f)[0].y() * IMAGE_SIZE);
-				int x1 = static_cast<int>(gen._dl.triangle(f)[1].x() * IMAGE_SIZE);
-				int y1 = static_cast<int>(gen._dl.triangle(f)[1].y() * IMAGE_SIZE);
-				int x2 = static_cast<int>(gen._dl.triangle(f)[2].x() * IMAGE_SIZE);
-				int y2 = static_cast<int>(gen._dl.triangle(f)[2].y() * IMAGE_SIZE);
+				int x0 = static_cast<int>(gen._dl.triangle(f)[0].x() * _IMAGE_SIZE);
+				int y0 = static_cast<int>(gen._dl.triangle(f)[0].y() * _IMAGE_SIZE);
+				int x1 = static_cast<int>(gen._dl.triangle(f)[1].x() * _IMAGE_SIZE);
+				int y1 = static_cast<int>(gen._dl.triangle(f)[1].y() * _IMAGE_SIZE);
+				int x2 = static_cast<int>(gen._dl.triangle(f)[2].x() * _IMAGE_SIZE);
+				int y2 = static_cast<int>(gen._dl.triangle(f)[2].y() * _IMAGE_SIZE);
 				image.poly({ { x0, y0 },{ x1, y1 },{ x2, y2 } }, color);
 				last_face = line_face_circulator;
 			}
@@ -58,10 +58,10 @@ static void draw_slope(const rnn::WorldGen& gen, scl::file::BMP_Image& image, in
 {
 	for (size_t i = 0; i < gen._slope.size() - 1; i++)
 	{
-		int x0 = static_cast<int>(gen._slope[i].x() * IMAGE_SIZE);
-		int y0 = static_cast<int>(gen._slope[i].y() * IMAGE_SIZE);
-		int x1 = static_cast<int>(gen._slope[i + 1].x() * IMAGE_SIZE);
-		int y1 = static_cast<int>(gen._slope[i + 1].y() * IMAGE_SIZE);
+		int x0 = static_cast<int>(gen._slope[i].x() * _IMAGE_SIZE);
+		int y0 = static_cast<int>(gen._slope[i].y() * _IMAGE_SIZE);
+		int x1 = static_cast<int>(gen._slope[i + 1].x() * _IMAGE_SIZE);
+		int y1 = static_cast<int>(gen._slope[i + 1].y() * _IMAGE_SIZE);
 		image.line(x0, y0, x1, y1, color);
 
 	}
@@ -71,10 +71,10 @@ static void draw_slope_path(const rnn::WorldGen& gen, scl::file::BMP_Image& imag
 {
 	for (int i = 0; i < gen._slope_path.size() - 1; i++)
 	{
-		int x0 = static_cast<int>(gen._slope_path[i].x() * IMAGE_SIZE);
-		int y0 = static_cast<int>(gen._slope_path[i].y() * IMAGE_SIZE);
-		int x1 = static_cast<int>(gen._slope_path[i + 1].x() * IMAGE_SIZE);
-		int y1 = static_cast<int>(gen._slope_path[i + 1].y() * IMAGE_SIZE);
+		int x0 = static_cast<int>(gen._slope_path[i].x() * _IMAGE_SIZE);
+		int y0 = static_cast<int>(gen._slope_path[i].y() * _IMAGE_SIZE);
+		int x1 = static_cast<int>(gen._slope_path[i + 1].x() * _IMAGE_SIZE);
+		int y1 = static_cast<int>(gen._slope_path[i + 1].y() * _IMAGE_SIZE);
 		image.line(x0, y0, x1, y1, color);
 	}
 }
@@ -102,13 +102,13 @@ static void draw_voronoi(const rnn::WorldGen& gen, scl::file::BMP_Image& image, 
 
 		if (has_vertex1 && has_vertex2) {
 			//Finite Voronoi edge
-			int x1 = static_cast<int>(voronoi_vertex1.x() * IMAGE_SIZE);
-			int y1 = static_cast<int>(voronoi_vertex1.y() * IMAGE_SIZE);
-			int x2 = static_cast<int>(voronoi_vertex2.x() * IMAGE_SIZE);
-			int y2 = static_cast<int>(voronoi_vertex2.y() * IMAGE_SIZE);
+			int x1 = static_cast<int>(voronoi_vertex1.x() * _IMAGE_SIZE);
+			int y1 = static_cast<int>(voronoi_vertex1.y() * _IMAGE_SIZE);
+			int x2 = static_cast<int>(voronoi_vertex2.x() * _IMAGE_SIZE);
+			int y2 = static_cast<int>(voronoi_vertex2.y() * _IMAGE_SIZE);
 
-			if (x1 >= 0 && x1 < IMAGE_SIZE && y1 >= 0 && y1 < IMAGE_SIZE &&
-				x2 >= 0 && x2 < IMAGE_SIZE && y2 >= 0 && y2 < IMAGE_SIZE) {
+			if (x1 >= 0 && x1 < _IMAGE_SIZE && y1 >= 0 && y1 < _IMAGE_SIZE &&
+				x2 >= 0 && x2 < _IMAGE_SIZE && y2 >= 0 && y2 < _IMAGE_SIZE) {
 				image.line(x1, y1, x2, y2, color);
 			}
 		}
@@ -129,7 +129,7 @@ static int get_color_by_terrain(int terrain_type) {
 		return (r << 16) | (g << 8) | b;
 	}
 	else if (terrain_type == 0)
-		return YELLOW; //Color for coast (0)
+		return _YELLOW; //Color for coast (0)
 	//Land gradient (positive numbers)
 	else {
 		//Map terrain values from 0 to inf to a gradient from green to dark green
@@ -145,8 +145,8 @@ static int get_color_by_terrain(int terrain_type) {
 static void draw_points_terrain(rnn::WorldGen& gen, scl::file::BMP_Image& image)
 {
 	for (size_t i = 0; i < gen._point_cloud.size(); i++) {
-		int x = static_cast<int>(gen._point_cloud[i].x() * IMAGE_SIZE);
-		int y = static_cast<int>(gen._point_cloud[i].y() * IMAGE_SIZE);
+		int x = static_cast<int>(gen._point_cloud[i].x() * _IMAGE_SIZE);
+		int y = static_cast<int>(gen._point_cloud[i].y() * _IMAGE_SIZE);
 		int color = get_color_by_terrain(gen._terrain[i]);
 		image.put(x, y, color);
 	}
@@ -155,9 +155,9 @@ static void draw_points_terrain(rnn::WorldGen& gen, scl::file::BMP_Image& image)
 static void draw_basic_terrain(rnn::WorldGen& gen, scl::file::BMP_Image& image)
 {
 	#pragma omp parallel for collapse(2)
-	for (size_t i = 0; i < IMAGE_SIZE; i++) {
-		for (size_t j = 0; j < IMAGE_SIZE; j++) {
-			Point_2 pos = Point_2(static_cast<float>(i) / IMAGE_SIZE, static_cast<float>(j) / IMAGE_SIZE);
+	for (size_t i = 0; i < _IMAGE_SIZE; i++) {
+		for (size_t j = 0; j < _IMAGE_SIZE; j++) {
+			Point_2 pos = Point_2(static_cast<float>(i) / _IMAGE_SIZE, static_cast<float>(j) / _IMAGE_SIZE);
 			//Find the closest point in the point cloud
 			auto neighbor = gen._dl.nearest_vertex(pos);
 			size_t idx = gen._points_index_map[neighbor];
@@ -201,12 +201,12 @@ static void draw_terrain(const rnn::WorldGen& gen, scl::file::BMP_Image& image) 
 			std::vector<std::pair<int, int>> screen_vertices;
 
 			for (const auto& v : voronoi_vertices) {
-				int x = static_cast<int>(v.x() * IMAGE_SIZE);
-				int y = static_cast<int>(v.y() * IMAGE_SIZE);
+				int x = static_cast<int>(v.x() * _IMAGE_SIZE);
+				int y = static_cast<int>(v.y() * _IMAGE_SIZE);
 
 				//Clamp to image bounds
-				x = std::max(0, std::min(IMAGE_SIZE - 1, x));
-				y = std::max(0, std::min(IMAGE_SIZE - 1, y));
+				x = std::max(0, std::min(_IMAGE_SIZE - 1, x));
+				y = std::max(0, std::min(_IMAGE_SIZE - 1, y));
 
 				screen_vertices.push_back({ x, y });
 			}
@@ -271,26 +271,26 @@ int main()
 		rnn::WorldGen gen;
 		archive(gen);
 		
-		scl::file::BMP_Image image(IMAGE_SIZE, IMAGE_SIZE);
+		scl::file::BMP_Image image(_IMAGE_SIZE, _IMAGE_SIZE);
 
-		draw_points(gen, image, WHITE);
-		draw_delaunay(gen, image, WHITE);
+		draw_points(gen, image, _WHITE);
+		draw_delaunay(gen, image, _WHITE);
 		//draw_used_faces_by_slope(dl_all, gen._slope, path, image, BLUE);
-		draw_slope(gen, image, RED);
-		draw_slope_path(gen, image, PURPLE);
+		draw_slope(gen, image, _RED);
+		draw_slope_path(gen, image, _PURPLE);
 		image.save(path + "/path.bmp");
 		image.clear();
 
-		draw_delaunay(gen, image, WHITE);
-		draw_slope_path(gen, image, PURPLE);
+		draw_delaunay(gen, image, _WHITE);
+		draw_slope_path(gen, image, _PURPLE);
 		draw_points_terrain(gen, image);
 		image.save(path + "/terrain_points.bmp");
-		draw_voronoi(gen, image, AQUA);
+		draw_voronoi(gen, image, _AQUA);
 		image.save(path + "/voronoi.bmp");
 		draw_terrain(gen, image);
 		image.save(path + "/terrain.bmp");
-		draw_delaunay(gen, image, WHITE);
-		draw_slope_path(gen, image, PURPLE);
+		draw_delaunay(gen, image, _WHITE);
+		draw_slope_path(gen, image, _PURPLE);
 		image.save(path + "/terrain_delaunay.bmp");
 	}
 	else 

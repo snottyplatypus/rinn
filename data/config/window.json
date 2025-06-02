@@ -6,9 +6,9 @@
   },
 
   "font": {
-    "name": "font10x10.png",
-    "width": 10,
-    "height": 10,
+    "name": "font.png",
+    "width": 16,
+    "height": 16,
     "col": 16,
     "row": 16
   }
