@@ -23,8 +23,6 @@ namespace rnn
 		~WorldGen();
 
 		void generate(scl::World& wrld);
-		Point_2 random_point(scl::DefaultPRNG& PRNG);
-		Point_2 random_point_on_edge(scl::DefaultPRNG& PRNG);
 
 		std::vector<Point_2> _point_cloud;
 		std::unordered_map<Delaunay::Vertex_handle, size_t> _points_index_map;
@@ -88,7 +86,9 @@ namespace rnn
 		}
 
 	protected:
-		std::vector<int> mark_points_by_path_proximity(scl::DefaultPRNG& PRNG);
+		Point_2 random_point();
+		Point_2 random_point_on_edge();
+		std::vector<int> mark_points_by_path_proximity();
 		void create_elevation();
 
 		struct data_config

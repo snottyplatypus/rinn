@@ -14,19 +14,17 @@ namespace scl
 		~Engine();
 
 		void init();
-		std::shared_ptr<Renderer> renderer() const { return _renderer; }
-	private:
-		std::shared_ptr<Renderer> _renderer;
 	};
-
-	extern std::shared_ptr<Engine> system;
 
 	namespace System 
 	{
 		void init();
 	}
 
+	extern std::shared_ptr<Engine> system;
 	extern std::unique_ptr<scl::DefaultPRNG> rand;
+	extern std::shared_ptr<Renderer> renderer;
+
 }
 
 #endif

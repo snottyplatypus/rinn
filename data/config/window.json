@@ -3,13 +3,5 @@
     "width": 1400,
     "height": 750,
     "fullscreen": false
-  },
-
-  "font": {
-    "name": "font.png",
-    "width": 16,
-    "height": 16,
-    "col": 16,
-    "row": 16
   }
 }

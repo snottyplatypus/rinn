@@ -21,8 +21,9 @@ int main()
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
-		scl::system->renderer()->drawFont("Rinn", scl::system->renderer()->_data_window._width / 2 - 32, scl::system->renderer()->_data_window._height / 2, WHITE);
-
+		
+		scl::renderer->drawFont("Rinn", scl::renderer->_window._width / 2, scl::renderer->_window._height / 2 - 128, 5);
+		scl::renderer->drawSprite("apache", scl::renderer->_window._width / 2, scl::renderer->_window._height / 2 + 128, 5);
 		EndDrawing();
 	}
 

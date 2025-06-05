@@ -1,0 +1,20 @@
+{
+  "font": {
+    "name": "font.png",
+    "width": 16,
+    "height": 16,
+    "col": 16,
+    "row": 16
+  },
+
+  "sprites": [
+    {
+      "key": "apache",
+      "value": {
+        "filename": "apache_64.png",
+        "width": 64,
+        "height": 64
+      }
+    }
+  ]
+}

@@ -30,13 +30,12 @@ rnn::WorldGen::~WorldGen()
 */
 void rnn::WorldGen::generate(scl::World& wrld)
 {
-	//Initializing PRNG and load config file
-	scl::DefaultPRNG PRNG;
+	//Load config file and initialize random with seed
 	std::ifstream file("../data/config/worldgen.json");
 	cereal::JSONInputArchive archive(file);
 	archive(cereal::make_nvp("worldgen", _data_config));
 	if (_data_config._seed >= 0) {
-		PRNG.seed(static_cast<uint32_t>(_data_config._seed));
+		scl::rand->seed(static_cast<uint32_t>(_data_config._seed));
 		std::cout << "Using seed : " << _data_config._seed << std::endl;
 	}
 
@@ -44,7 +43,7 @@ void rnn::WorldGen::generate(scl::World& wrld)
 	std::clock_t timer = clock();
 	//Generate points using Poisson Generation
 	if(_point_cloud.size() == 0)
-		_point_cloud = scl::PoissonGenerator::generatePoissonPoints(std::numeric_limits<int>::max(), PRNG, 10, false, _data_config._points_min_dist);
+		_point_cloud = scl::PoissonGenerator::generatePoissonPoints(std::numeric_limits<int>::max(), *scl::rand, 10, false, _data_config._points_min_dist);
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 	std::cout << "Points generated : " << _point_cloud.size() << std::endl;
 
@@ -69,10 +68,10 @@ void rnn::WorldGen::generate(scl::World& wrld)
 	std::cout << "Generating slope.. ";
 	timer = clock();
 	std::vector<Point_2> unsorted_slope;
-	unsorted_slope.push_back(random_point_on_edge(PRNG));
-	for (int i = 0; i < _data_config._slope_min + PRNG.randomInt(_data_config._slope_max - _data_config._slope_min); i++)
-		unsorted_slope.push_back(random_point(PRNG));
-	unsorted_slope.push_back(random_point_on_edge(PRNG));
+	unsorted_slope.push_back(random_point_on_edge());
+	for (int i = 0; i < _data_config._slope_min + scl::rand->randomInt(_data_config._slope_max - _data_config._slope_min); i++)
+		unsorted_slope.push_back(random_point());
+	unsorted_slope.push_back(random_point_on_edge());
 	
 	//Sort slope points by distance to the first point and do it for all points
 	while(!unsorted_slope.empty()) 
@@ -118,7 +117,7 @@ void rnn::WorldGen::generate(scl::World& wrld)
 	//Generate terrain around path
 	std::cout << "Generating terrain.. ";
 	timer = clock();
-	_terrain = mark_points_by_path_proximity(PRNG);
+	_terrain = mark_points_by_path_proximity();
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 
 	//Create elevation
@@ -133,23 +132,23 @@ void rnn::WorldGen::generate(scl::World& wrld)
 /*
 	This function generate a random point in the generated world inside boundaries
 */
-Point_2 rnn::WorldGen::random_point(scl::DefaultPRNG& PRNG)
+Point_2 rnn::WorldGen::random_point()
 {
 	float r_x_min = 0.0f + _data_config._boundaries._x_min;
 	float r_x_max = 1.0f - _data_config._boundaries._x_max;
 	float r_y_min = 0.0f + _data_config._boundaries._y_min;
 	float r_y_max = 1.0f - _data_config._boundaries._y_max;
-	return Point_2(PRNG.randomFloat(r_x_min, r_x_max), PRNG.randomFloat(r_y_min, r_y_max));
+	return Point_2(scl::rand->randomFloat(r_x_min, r_x_max), scl::rand->randomFloat(r_y_min, r_y_max));
 }
 
 /*
 	This function generate a random point on the edge of the generated world inside boundaries
 */
-Point_2 rnn::WorldGen::random_point_on_edge(scl::DefaultPRNG& PRNG)
+Point_2 rnn::WorldGen::random_point_on_edge()
 {
-	float r_x = PRNG.randomFloat(0.0f + _data_config._boundaries._x_min, 1.0f - _data_config._boundaries._x_max);
-	float r_y = PRNG.randomFloat(0.0f + _data_config._boundaries._y_min, 1.0f - _data_config._boundaries._y_max);
-	float p = PRNG.randomFloat();
+	float r_x = scl::rand->randomFloat(0.0f + _data_config._boundaries._x_min, 1.0f - _data_config._boundaries._x_max);
+	float r_y = scl::rand->randomFloat(0.0f + _data_config._boundaries._y_min, 1.0f - _data_config._boundaries._y_max);
+	float p = scl::rand->randomFloat();
 	if (p < 0.5f)
 		if (p < 0.25f)
 			return Point_2(r_x, 0.0f + _data_config._boundaries._y_min);
@@ -168,7 +167,7 @@ Point_2 rnn::WorldGen::random_point_on_edge(scl::DefaultPRNG& PRNG)
 	- Points that are within a certain distance from the path are marked as 2 (land) depending on a fixed probability and threshold
 	- Points that are not within distance are marked as 1 (sea)
 */
-std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& PRNG)
+std::vector<int> rnn::WorldGen::mark_points_by_path_proximity()
 {
 	std::vector<int> point_marks(_point_cloud.size(), -3); // Default mark is -3 (void)
 
@@ -193,7 +192,7 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& 
 	}
 
 	while (!queue.empty()) {
-		size_t random_index = PRNG.randomInt(queue.size() - 1);
+		size_t random_index = scl::rand->randomInt(queue.size() - 1);
 		size_t point_idx = queue[random_index];
 
 		//Remove the point from the queue by swapping with the last element and popping
@@ -220,7 +219,7 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& 
 
 				//If within threshold distance, mark as land with a fixed probability
 				auto sq_dist = CGAL::squared_distance(_point_cloud[point_idx], _point_cloud[i]);
-				bool land_pb = PRNG.randomFloat(0.0f, 1.0f) < _data_config._land_probability;
+				bool land_pb = scl::rand->randomFloat(0.0f, 1.0f) < _data_config._land_probability;
 				if (sq_dist < (CGAL::square(_data_config._points_min_dist) * CGAL::square(_data_config._land_threshold)) && land_pb) {
 					point_marks[point_idx] = LAND; break;
 				}
