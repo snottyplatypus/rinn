@@ -16,6 +16,5 @@
 #include "include/system.h"
 #include "include/terrain.h"
 #include "include/world.h"
-#include "include/worldgen.h"
 
 #endif

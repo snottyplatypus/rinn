@@ -270,7 +270,7 @@ int main()
 		cereal::BinaryInputArchive archive(file);
 		rnn::WorldGen gen;
 		archive(gen);
-		
+
 		scl::file::BMP_Image image(_IMAGE_SIZE, _IMAGE_SIZE);
 
 		draw_points(gen, image, _WHITE);

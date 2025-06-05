@@ -13,7 +13,7 @@ file(
 )
 
 # This will create a static library named scroll.
-add_library(scroll STATIC ${SOURCE_FILES})
+add_library(scroll STATIC ${SOURCE_FILES} )
 
 # Link libraries.
 find_package(raylib CONFIG REQUIRED)

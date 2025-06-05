@@ -7,12 +7,18 @@ namespace scl
 	class Pos3D
 	{
 	public:
-		Pos3D(T x, T y, T z);
-		~Pos3D();
+		Pos3D(T x, T y, T z) : _x(x), _y(y), _z(z) {}
+		~Pos3D() {}
 
 		T _x;
 		T _y;
 		T _z;
+
+		template<class Archive>
+		void serialize(Archive& ar) const
+		{
+			ar(_x, _y, _z);
+		}
 	};
 }
 

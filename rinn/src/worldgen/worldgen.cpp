@@ -6,6 +6,11 @@
 #include <iostream>
 #include <fstream>
 #include <queue>
+#include <filesystem>
+#include <cereal/archives/binary.hpp>
+
+static const int LAND = 1;
+static const int SEA = -2;
 
 rnn::WorldGen::WorldGen()
 {
@@ -20,8 +25,10 @@ rnn::WorldGen::~WorldGen()
 	1- Generate points using Poisson Generation
 	2- Triangulate all points using Delaunay triangulation
 	3- Generate a slope that will be used to generate terrain around it
+	4- Generation terrain around slope path based on proximity to the path
+	5- Create elevation based on the terrain
 */
-scl::World rnn::WorldGen::generate()
+void rnn::WorldGen::generate(scl::World& wrld)
 {
 	//Initializing PRNG and load config file
 	scl::DefaultPRNG PRNG;
@@ -120,7 +127,7 @@ scl::World rnn::WorldGen::generate()
 	create_elevation();
 	std::cout << "done " << (clock() - timer) / (CLOCKS_PER_SEC / 1000) << "ms" << std::endl;
 
-	return scl::World();
+	saveNew(wrld);
 }
 
 /*
@@ -224,6 +231,12 @@ std::vector<int> rnn::WorldGen::mark_points_by_path_proximity(scl::DefaultPRNG& 
 	return point_marks;
 }
 
+/*
+	This function creates elevation based on the terrain and proximity to coast points
+	- Coast points are identified as land points with sea neighbors
+	- BFS is used to compute hop distances from coast points
+	- Elevation is set based on hop distances, with land points getting positive values and sea points negative values
+*/
 void rnn::WorldGen::create_elevation()
 {
 	//Find all coast points
@@ -308,4 +321,35 @@ void rnn::WorldGen::create_elevation()
 		else //Sea points get negative elevation based on hop distance from coast
 			_terrain[i] = -hop_distances[i];
 	}
+}
+
+void rnn::WorldGen::saveTo(std::string& path)
+{
+	std::cout << "Saving generation data.. ";
+	std::ofstream file(path + "/gen.dat", std::ios::binary | std::ios::out);
+	cereal::BinaryOutputArchive archive(file);
+	archive(*this);
+	file.close();
+	std::cout << "done at " << path << std::endl;
+}
+
+void rnn::WorldGen::saveNew(const scl::World& wrld)
+{
+	std::string path = "../data/world";
+	std::string sub_name = "world";
+	int n_world = 1;
+	//Check the number of world already saved and add 1 to this number
+	for (auto& p : std::filesystem::directory_iterator(path)) {
+		std::string f_name = std::filesystem::path(p).filename().string();
+		std::size_t found = f_name.find(sub_name);
+		if (found != std::string::npos)
+			n_world++;
+	}
+	//Number of the new world saved
+	sub_name += std::to_string(n_world);
+	//Create the directory
+	path += "/" + sub_name;
+	std::filesystem::create_directory(path);
+	saveTo(path);
+	wrld.saveTo(path);
 }
