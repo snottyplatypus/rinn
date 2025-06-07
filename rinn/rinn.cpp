@@ -23,7 +23,7 @@ int main()
 		ClearBackground(BLACK);
 		
 		scl::renderer->drawFont("Rinn", scl::renderer->_window._width / 2, scl::renderer->_window._height / 2 - 128, 5);
-		scl::renderer->drawSprite("apache", scl::renderer->_window._width / 2, scl::renderer->_window._height / 2 + 128, 5);
+		scl::renderer->drawSprite("tiger", scl::renderer->_window._width / 2, scl::renderer->_window._height / 2 + 128, 5);
 		EndDrawing();
 	}
 

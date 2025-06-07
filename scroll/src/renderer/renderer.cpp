@@ -25,10 +25,10 @@ void scl::Renderer::init()
 	cereal::JSONInputArchive archive_w(file_w);
 	archive_w(cereal::make_nvp("window", _window));
 
-	std::ifstream file_f("../data/config/font.json");
-	cereal::JSONInputArchive archive_f(file_f);
-	archive_f(cereal::make_nvp("font", _data_font));
-	archive_f(cereal::make_nvp("sprites", _sprites_data));
+	std::ifstream file_a("../data/config/assets.json");
+	cereal::JSONInputArchive archive_a(file_a);
+	archive_a(cereal::make_nvp("font", _data_font));
+	archive_a(cereal::make_nvp("sprites", _sprites_data));
 
 	std::string font_path = "../data/art/" + _data_font._name;
 

@@ -9,6 +9,14 @@
 
   "sprites": [
     {
+      "key": "tiger",
+      "value": {
+        "filename": "tiger_64.png",
+        "width": 64,
+        "height": 64
+      }
+    },
+    {
       "key": "apache",
       "value": {
         "filename": "apache_64.png",
